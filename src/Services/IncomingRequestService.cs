@@ -29,7 +29,7 @@ namespace Services
 
 		public async Task<bool> ProcessNextRequest()
 		{
-			var msg = await _incomingQueue.GetRawMessageAsync();
+			var msg = await _incomingQueue.PeekRawMessageAsync();
 			if (msg == null)
 				return false;
 			var request = JsonConvert.DeserializeObject<IncomingRequest>(msg.AsString);

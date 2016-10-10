@@ -68,7 +68,7 @@ namespace Services
 					var request = JsonConvert.DeserializeObject<InternalRequest>(msg.AsString);
 					await WaitParentExecution(request.Id, request.Parents);
 					await ExecuteRequest(request);
-					msg = await _listenQueue.GetRawMessageAsync();
+					//msg = await _listenQueue.GetRawMessageAsync();
 					await _listenQueue.FinishRawMessageAsync(msg);
 				}
 			} while (msg != null && Working);
@@ -82,6 +82,7 @@ namespace Services
 			{
 				foreach (var requestParent in requestParents.ToList())
 				{
+					//TODO: check error flag of parent transaction
 					var transaction = await _coinTransactionRepository.GetCoinTransaction(requestParent);
 					if (transaction?.ConfirmaionLevel >= _baseSettings.MinTransactionConfirmaionLevel)
 						requestParents.Remove(requestParent);
@@ -128,6 +129,7 @@ namespace Services
 
 		public override async void Stop()
 		{
+			//TODO: exception
 			if (await _listenQueue.Count() > 0)
 				throw new Exception("Cant stop listener. Queue is not empty.");
 			base.Stop();

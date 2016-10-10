@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Core.Log;
 using Core.Repositories;
 using Core.Settings;
 using Newtonsoft.Json;
@@ -33,16 +34,18 @@ namespace Services
 		private readonly Func<string, IQueueListener> _queueListenerFactory;
 		private readonly ICoinTransactionRepository _coinTransactionRepository;
 		private readonly IBaseSettings _settings;
+		private readonly ILog _logger;
 
 		private readonly Dictionary<string, IQueueListener> _runningListeners = new Dictionary<string, IQueueListener>();
 
 		public QueueListenerService(IQueueListenerRepository queueListenerRepository, Func<string, IQueueListener> queueListenerFactory,
-			ICoinTransactionRepository coinTransactionRepository, IBaseSettings settings)
+			ICoinTransactionRepository coinTransactionRepository, IBaseSettings settings, ILog logger)
 		{
 			_queueListenerRepository = queueListenerRepository;
 			_queueListenerFactory = queueListenerFactory;
 			_coinTransactionRepository = coinTransactionRepository;
 			_settings = settings;
+			_logger = logger;
 		}
 
 		private async Task<IDbQueueListener> GetDbQueueListener(List<string> clients)
@@ -112,9 +115,16 @@ namespace Services
 				{
 					if (runningListener.IsIdle)
 					{
-						runningListener.Stop();
-						_runningListeners.Remove(runningListener.Name);
-						_queueListenerRepository.RemoveListener(runningListener.Name);
+						try
+						{
+							runningListener.Stop();
+							_runningListeners.Remove(runningListener.Name);
+							_queueListenerRepository.RemoveListener(runningListener.Name);
+						}
+						catch (Exception e)
+						{
+							await _logger.WriteError("QeueuListenerService", "ShutdownIdleListeners", $"Queue name = {runningListener.Name}", e);
+						}
 					}
 				}
 			}

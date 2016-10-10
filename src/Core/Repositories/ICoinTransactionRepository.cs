@@ -47,5 +47,7 @@ namespace Core.Repositories
 		Task<IEnumerable<ICoinTransaction>> GetCoinTransactions(List<string> clients, int minConfirmationLevel);
 		Task SetChildFlags(IEnumerable<ICoinTransaction> transactions, List<string> clients);
 		Task SetTransactionHash(ICoinTransaction transaction);
+
+		Task SetTransactionConfirmationLevel(ICoinTransaction transaction);
 	}
 }

@@ -19,6 +19,11 @@
 		/// Used to listening incoming requests from extrnal service
 		/// </summary>
 		public const string CoinIncomingRequestsQueue = "ethereum-coin-request-queue";
+
+		/// <summary>
+		/// Used to determine if we should setup client queue
+		/// </summary>
+		public const string ClientQueuePrefix = "ethereum-client-queue";
 		
 
 		/// <summary>

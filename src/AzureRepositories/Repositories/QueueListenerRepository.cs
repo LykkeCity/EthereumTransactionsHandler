@@ -27,7 +27,7 @@ namespace AzureRepositories.Repositories
 
 		public async Task<IDbQueueListener> GetQueueListener(List<string> clients)
 		{
-			return (await _table.GetDataAsync(o => clients.Contains(o.Name))).OrderBy(o => o.Name).FirstOrDefault();
+			return (await _table.GetDataAsync(o => clients.Contains(o.Client))).OrderBy(o => o.Name).FirstOrDefault();
 		}
 
 		public Task Insert(IDbQueueListener dbQueueListener)

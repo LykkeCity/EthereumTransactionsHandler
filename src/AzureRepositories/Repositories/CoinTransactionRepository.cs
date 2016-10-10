@@ -104,7 +104,14 @@ namespace AzureRepositories.Repositories
 
 		public async Task SetTransactionConfirmationLevel(ICoinTransaction transaction)
 		{
-			await _table.ReplaceAsync(CoinTransationEntity.Key, transaction.RequestId.ToString(), entity =>
+			if (string.IsNullOrWhiteSpace(transaction.TransactionHash))
+				throw new ArgumentNullException(nameof(transaction), "Transaction hash is null");
+
+			var filter = TableQuery.GenerateFilterCondition("TransactionHash", QueryComparisons.Equal, transaction.TransactionHash);
+
+			var current = (await _table.WhereAsync(new TableQuery<CoinTransationEntity>().Where(filter))).FirstOrDefault();
+			
+			await _table.ReplaceAsync(current, entity =>
 			{
 				entity.ConfirmaionLevel = transaction.ConfirmaionLevel;
 				entity.Error = transaction.Error;

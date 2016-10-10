@@ -31,21 +31,31 @@ namespace AzureRepositories
 			services.AddSingleton<IMonitoringRepository>(provider => new MonitoringRepository(
 				new AzureTableStorage<MonitoringEntity>(settings.Db.ExchangeQueueConnString, Constants.StoragePrefix + Constants.MonitoringTable,
 					provider.GetService<ILog>())));
-		
+
 		}
 
 		public static void RegisterAzureQueues(this IServiceCollection services, IBaseSettings settings)
 		{
+			services.AddTransient<Func<string, string, IQueueExt>>(provider =>
+			{
+				return ((prefix, name) =>
+				{
+					if (prefix == Constants.ClientQueuePrefix)
+						return new AzureQueueExt(settings.Db.DataConnString, Constants.StoragePrefix + name);
+
+					throw new Exception("Queue is not registered");
+				});
+			});
 			services.AddTransient<Func<string, IQueueExt>>(provider =>
 			{
 				return (x =>
 				{
 					switch (x)
-					{					
+					{
 						case Constants.CoinTransactionQueue:
 							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);
 						case Constants.CoinEventQueue:
-							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);					
+							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);
 						default:
 							throw new Exception("Queue is not registered");
 					}
