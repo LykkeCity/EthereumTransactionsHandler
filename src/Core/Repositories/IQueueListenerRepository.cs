@@ -7,6 +7,9 @@ namespace Core.Repositories
 {
 	public interface IDbQueueListener
 	{
+		/// <summary>
+		/// Queue's name that listener is listening
+		/// </summary>
 		string Name { get; }
 
 		string Client { get; }		
@@ -25,5 +28,6 @@ namespace Core.Repositories
 		Task Insert(IDbQueueListener dbQueueListener);
 		Task<IEnumerable<IDbQueueListener>>  GetListeners();
 		void RemoveListener(string runningListenerName);
+		void DeleteTable();
 	}
 }

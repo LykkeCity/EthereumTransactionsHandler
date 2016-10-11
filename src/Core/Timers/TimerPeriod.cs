@@ -13,6 +13,8 @@ namespace Core.Timers
 		private readonly string _componentName;
 		private readonly int _periodMs;
 		private readonly ILog _log;
+		private bool _finished = false;
+
 
 		protected TimerPeriod(string componentName, int periodMs, ILog log)
 		{
@@ -39,6 +41,7 @@ namespace Core.Timers
 
 		private async Task ThreadMethod()
 		{
+			_finished = false;
 			while (Working)
 			{
 				try
@@ -51,6 +54,7 @@ namespace Core.Timers
 				}
 				await Task.Delay(_periodMs);
 			}
+			_finished = true;
 		}
 
 		public virtual void Start()
@@ -64,9 +68,12 @@ namespace Core.Timers
 
 		}
 
-		public virtual void Stop()
+		public virtual async Task Stop()
 		{
+			if (!Working) return;
 			Working = false;
+			while (!_finished)
+				await Task.Delay(50);
 		}
 
 		public string GetComponentName()

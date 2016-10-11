@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Core.Log;
 using Core.Repositories;
 using Core.Settings;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Services.Models;
 using Services.Models.Internal;
@@ -19,11 +20,11 @@ namespace Services
 
 		Task StartupListeners();
 
-		IQueueListener RunQueueListener(IDbQueueListener listener);
-		Task PutToListenerQueue(IncomingCashInRequest cashin, Guid id);
-		Task PutToListenerQueue(IncomingCashOutRequest cashout, Guid id);
-		Task PutToListenerQueue(IncomingSwapRequest swap, Guid id);
-		Task ShutdownIdleListeners();
+		IQueueListener CreateAndRunQueueListener(IDbQueueListener listener);
+		Task<IQueueListener> PutToListenerQueue(IncomingCashInRequest cashin, Guid id);
+		Task<IQueueListener> PutToListenerQueue(IncomingCashOutRequest cashout, Guid id);
+		Task<IQueueListener> PutToListenerQueue(IncomingSwapRequest swap, Guid id);
+		Task ShutdownIdleListeners(bool force = false);
 	}
 
 	public class QueueListenerService : IQueueListenerService
@@ -70,7 +71,7 @@ namespace Services
 			{
 				var listeners = await _queueListenerRepository.GetListeners();
 				foreach (var dbQueueListener in listeners)
-					RunQueueListener(dbQueueListener);
+					CreateAndRunQueueListener(dbQueueListener);
 			}
 			finally
 			{
@@ -78,46 +79,43 @@ namespace Services
 			}
 		}
 
-		public IQueueListener RunQueueListener(IDbQueueListener listener)
+		public IQueueListener CreateAndRunQueueListener(IDbQueueListener dbListener)
 		{
-			if (_runningListeners.ContainsKey(listener.Name))
-				return _runningListeners[listener.Name];
-			var queueListener = _queueListenerFactory(listener.Name);
-			queueListener.Start();
-			_runningListeners.Add(listener.Name, queueListener);
-			return queueListener;
+			var listener = CreateQueueListener(dbListener);
+			listener.Start();			
+			return listener;
 		}
 
-		public Task PutToListenerQueue(IncomingCashInRequest cashin, Guid id)
+		public Task<IQueueListener> PutToListenerQueue(IncomingCashInRequest cashin, Guid id)
 		{
 			var clients = new List<string> { cashin.To };
 			return PutToListenerQueue(RequestType.CashIn, cashin, clients, id);
 		}
 
-		public Task PutToListenerQueue(IncomingCashOutRequest cashout, Guid id)
+		public Task<IQueueListener> PutToListenerQueue(IncomingCashOutRequest cashout, Guid id)
 		{
 			var clients = new List<string> { cashout.Client };
-			return PutToListenerQueue(RequestType.CashIn, cashout, clients, id);
+			return PutToListenerQueue(RequestType.CashOut, cashout, clients, id);
 		}
 
-		public Task PutToListenerQueue(IncomingSwapRequest swap, Guid id)
+		public Task<IQueueListener> PutToListenerQueue(IncomingSwapRequest swap, Guid id)
 		{
 			var clients = new List<string> { swap.ClientA, swap.ClientB };
-			return PutToListenerQueue(RequestType.CashIn, swap, clients, id);
+			return PutToListenerQueue(RequestType.Swap, swap, clients, id);
 		}
 
-		public async Task ShutdownIdleListeners()
+		public async Task ShutdownIdleListeners(bool force = false)
 		{
 			await _sync.WaitAsync();
 			try
 			{
-				foreach (var runningListener in _runningListeners.Select(o => o.Value))
+				foreach (var runningListener in _runningListeners.Select(o => o.Value).ToList())
 				{
-					if (runningListener.IsIdle)
+					if (runningListener.IsIdle || force)
 					{
 						try
 						{
-							runningListener.Stop();
+							await runningListener.Stop(force);
 							_runningListeners.Remove(runningListener.Name);
 							_queueListenerRepository.RemoveListener(runningListener.Name);
 						}
@@ -134,7 +132,7 @@ namespace Services
 			}
 		}
 
-		private async Task PutToListenerQueue(RequestType action, object data, List<string> clients, Guid id)
+		private async Task<IQueueListener> PutToListenerQueue(RequestType action, object data, List<string> clients, Guid id)
 		{
 			clients.Sort();
 			var transactions = (await _coinTransactionRepository.GetCoinTransactions(clients, _settings.MinTransactionConfirmaionLevel)).ToList();
@@ -146,9 +144,10 @@ namespace Services
 				Request = JsonConvert.SerializeObject(data)
 			};
 			await _sync.WaitAsync();
+			IQueueListener listener = null;
 			try
 			{
-				var listener = RunQueueListener(await GetDbQueueListener(clients));
+				listener = CreateQueueListener(await GetDbQueueListener(clients));
 				await listener.PutRequestToQueue(request);
 				await _coinTransactionRepository.AddCoinTransaction(new CoinTransaction
 				{
@@ -159,15 +158,27 @@ namespace Services
 					CreateDt = DateTime.UtcNow
 				});
 			}
-			catch (Exception ex)
+			catch (StorageException ex)
 			{
-				//TODO: detect insert duplicate exception
+				//if it's not insert duplicate expection then throw
+				if (ex.RequestInformation.HttpStatusCode != 409)
+					throw;
 			}
 			finally
 			{
 				_sync.Release();
 			}
 			await _coinTransactionRepository.SetChildFlags(transactions, clients);
+			return listener;
+		}
+
+		private IQueueListener CreateQueueListener(IDbQueueListener listener)
+		{
+			if (_runningListeners.ContainsKey(listener.Name))
+				return _runningListeners[listener.Name];
+			var queueListener = _queueListenerFactory(listener.Name);			
+			_runningListeners.Add(listener.Name, queueListener);
+			return queueListener;
 		}
 	}
 }

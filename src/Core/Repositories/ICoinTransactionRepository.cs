@@ -49,5 +49,7 @@ namespace Core.Repositories
 		Task SetTransactionHash(ICoinTransaction transaction);
 
 		Task SetTransactionConfirmationLevel(ICoinTransaction transaction);
+
+		void DeleteTable();
 	}
 }

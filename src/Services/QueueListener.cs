@@ -18,7 +18,7 @@ namespace Services
 	public interface IQueueListener
 	{
 		void Start();
-		void Stop();
+		Task Stop(bool force);
 
 		Task PutRequestToQueue(InternalRequest request);
 
@@ -38,12 +38,14 @@ namespace Services
 		private readonly IBaseSettings _baseSettings;
 		private readonly ILog _logger;
 		private readonly IApiCaller _apiCaller;
+		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
 
 		public bool IsIdle => DateTime.UtcNow - _lastMessage > TimeSpan.FromMinutes(10);
 		public string Name { get; }
 
 		public QueueListener(string name, IQueueExt listenQueue, ICoinTransactionRepository coinTransactionRepository,
-			  IBaseSettings baseSettings, ILog logger, IApiCaller apiCaller)
+			  IBaseSettings baseSettings, ILog logger, IApiCaller apiCaller,
+			  ITransactionRequestMappingRepository transactionRequestMappingRepository)
 			: base("QueueListener - " + name, PeriodSeconds * 1000, logger)
 		{
 			Name = name;
@@ -52,8 +54,8 @@ namespace Services
 			_baseSettings = baseSettings;
 			_logger = logger;
 			_apiCaller = apiCaller;
+			_transactionRequestMappingRepository = transactionRequestMappingRepository;
 		}
-
 
 		public override async Task Execute()
 		{
@@ -68,7 +70,7 @@ namespace Services
 					var request = JsonConvert.DeserializeObject<InternalRequest>(msg.AsString);
 					await WaitParentExecution(request.Id, request.Parents);
 					await ExecuteRequest(request);
-					//msg = await _listenQueue.GetRawMessageAsync();
+					msg = await _listenQueue.GetRawMessageAsync();
 					await _listenQueue.FinishRawMessageAsync(msg);
 				}
 			} while (msg != null && Working);
@@ -100,6 +102,11 @@ namespace Services
 			var transaction = await _coinTransactionRepository.GetCoinTransaction(request.Id);
 			if (!string.IsNullOrEmpty(transaction.TransactionHash)) return;
 			transaction.TransactionHash = await DoApiCall(request);
+			await _transactionRequestMappingRepository.InsertTransactionRequestMapping(new TransactionRequestMapping
+			{
+				RequestId = request.Id,
+				TransactionHash = transaction.TransactionHash
+			});
 			await _coinTransactionRepository.SetTransactionHash(transaction);
 		}
 
@@ -127,12 +134,12 @@ namespace Services
 			return _listenQueue.PutRawMessageAsync(JsonConvert.SerializeObject(request));
 		}
 
-		public override async void Stop()
+		public async Task Stop(bool force)
 		{
 			//TODO: exception
-			if (await _listenQueue.Count() > 0)
+			if (!force && await _listenQueue.Count() > 0)
 				throw new Exception("Cant stop listener. Queue is not empty.");
-			base.Stop();
+			await base.Stop();
 			_listenQueue.DeleteIfExists();
 		}
 	}

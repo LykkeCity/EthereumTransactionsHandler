@@ -31,7 +31,20 @@ namespace AzureRepositories
 			services.AddSingleton<IMonitoringRepository>(provider => new MonitoringRepository(
 				new AzureTableStorage<MonitoringEntity>(settings.Db.ExchangeQueueConnString, Constants.StoragePrefix + Constants.MonitoringTable,
 					provider.GetService<ILog>())));
+			services.AddSingleton<ICoinTransactionRepository>((provider => new CoinTransactionRepository(
+				new AzureTableStorage<CoinTransationEntity>(settings.Db.DataConnString,
+					Constants.StoragePrefix + Constants.CoinTransactionTable,
+					provider.GetService<ILog>()))));
 
+			services.AddSingleton<IQueueListenerRepository>((provider => new QueueListenerRepository(
+			new AzureTableStorage<DbQueueListenerEntity>(settings.Db.DataConnString,
+				Constants.StoragePrefix + Constants.QueueListenerTable,
+				provider.GetService<ILog>()))));
+
+			services.AddSingleton<ITransactionRequestMappingRepository>((provider => new TransactionRequestMappingRepository(
+			new AzureTableStorage<TransactionRequestMappingEntity>(settings.Db.DataConnString,
+				Constants.StoragePrefix + Constants.TransactionRequestMappingTable,
+				provider.GetService<ILog>()))));
 		}
 
 		public static void RegisterAzureQueues(this IServiceCollection services, IBaseSettings settings)

@@ -5,9 +5,10 @@
 		/// <summary>
 		/// Used to change table and queue names in testing enviroment
 		/// </summary>
-		public static string StoragePrefix { get; set; } = "";		
+		public static string StoragePrefix { get; set; } = "";
 
-		
+
+
 		public const string EmailNotifierQueue = "emailsqueue";		
 
 		/// <summary>
@@ -29,15 +30,12 @@
 		/// <summary>
 		/// Used to notify external services about events in coin contracts
 		/// </summary>
-		public const string CoinEventQueue = "ethereum-coin-event-queue";
-		
-		//coin contract event names
-		public const string CashInAction = "CashIn";
-		public const string CashOutAction = "CashOut";
-		public const string SwapAction = "Swap";
-
-
+		public const string CoinEventQueue = "ethereum-coin-event-queue";			
 
 		public const string MonitoringTable = "MonitoringTable";
+		public const string CoinTransactionTable = "CoinTransactionTable";
+		public const string QueueListenerTable = "QueueListenerTable";
+		public const string TransactionRequestMappingTable = "TransactionRequestMappingTable";		
+
 	}
 }

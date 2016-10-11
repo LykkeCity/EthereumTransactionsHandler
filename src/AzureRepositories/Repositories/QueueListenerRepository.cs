@@ -11,8 +11,20 @@ namespace AzureRepositories.Repositories
 
 	public class DbQueueListenerEntity : TableEntity, IDbQueueListener
 	{
+		public const string Key = "QueueListener";
+
 		public string Name => RowKey;
-		public string Client { get; }
+		public string Client { get; set; }
+
+		public static DbQueueListenerEntity Create(IDbQueueListener listener)
+		{
+			return new DbQueueListenerEntity
+			{
+				RowKey = listener.Name,
+				Client = listener.Client,
+				PartitionKey = Key
+			};
+		}
 	}
 
 
@@ -32,17 +44,22 @@ namespace AzureRepositories.Repositories
 
 		public Task Insert(IDbQueueListener dbQueueListener)
 		{
-			throw new NotImplementedException();
+			return _table.InsertAsync(DbQueueListenerEntity.Create(dbQueueListener));
 		}
 
-		public Task<IEnumerable<IDbQueueListener>> GetListeners()
+		public async Task<IEnumerable<IDbQueueListener>> GetListeners()
 		{
-			throw new NotImplementedException();
+			return await _table.GetDataAsync();
 		}
 
 		public void RemoveListener(string runningListenerName)
 		{
-			throw new NotImplementedException();
+			_table.DeleteAsync(DbQueueListenerEntity.Key, runningListenerName).Wait();
+		}
+
+		public void DeleteTable()
+		{
+			_table.DeleteIfExists();
 		}
 	}
 }

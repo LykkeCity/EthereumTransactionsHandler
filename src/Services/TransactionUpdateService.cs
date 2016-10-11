@@ -22,12 +22,15 @@ namespace Services
 	public class TransactionUpdateService : ITransactionUpdateService
 	{
 		private readonly ICoinTransactionRepository _coinTransactionRepository;
+		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
 		private readonly IQueueExt _queue;
 		private readonly ILog _logger;
 
-		public TransactionUpdateService(ILog logger, Func<string, IQueueExt> queueFactory, ICoinTransactionRepository coinTransactionRepository)
+		public TransactionUpdateService(ILog logger, Func<string, IQueueExt> queueFactory,
+			ICoinTransactionRepository coinTransactionRepository, ITransactionRequestMappingRepository transactionRequestMappingRepository)
 		{
 			_coinTransactionRepository = coinTransactionRepository;
+			_transactionRequestMappingRepository = transactionRequestMappingRepository;
 			_queue = queueFactory(Constants.CoinTransactionQueue);
 			_logger = logger;
 		}
@@ -41,13 +44,18 @@ namespace Services
 
 			var status = JsonConvert.DeserializeObject<CoinTransactionStatus>(msg.AsString);
 
-			await _coinTransactionRepository.SetTransactionConfirmationLevel(new CoinTransaction
-			{
-				ConfirmaionLevel = status.ConfirmationLevel,
-				Error = status.Error,
-				TransactionHash = status.TransactionHash
-			});
-
+			var transactionRequestMapping =
+				await _transactionRequestMappingRepository.GetTransactionRequestMapping(status.TransactionHash);
+			if (transactionRequestMapping == null)
+				await _logger.WriteWarning("TransactionUpdateService", "GetAndProcessTransactionStatus", "", $"Not found request by transaction hash {status.TransactionHash}");
+			else
+				await _coinTransactionRepository.SetTransactionConfirmationLevel(new CoinTransaction
+				{
+					ConfirmaionLevel = status.ConfirmationLevel,
+					Error = status.Error,
+					RequestId = transactionRequestMapping.RequestId
+				});
+			msg = await _queue.GetRawMessageAsync();
 			await _queue.FinishRawMessageAsync(msg);
 
 			return true;

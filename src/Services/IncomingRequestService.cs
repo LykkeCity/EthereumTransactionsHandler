@@ -38,17 +38,18 @@ namespace Services
 			{
 				case RequestType.CashIn:
 					var cashin = JsonConvert.DeserializeObject<IncomingCashInRequest>(request.JsonData);
-					await _queueListenerService.PutToListenerQueue(cashin, id);
+					(await _queueListenerService.PutToListenerQueue(cashin, id))?.Start();
 					break;
 				case RequestType.CashOut:
 					var cashout = JsonConvert.DeserializeObject<IncomingCashOutRequest>(request.JsonData);
-					await _queueListenerService.PutToListenerQueue(cashout, id);
+					(await _queueListenerService.PutToListenerQueue(cashout, id)).Start();
 					break;
 				case RequestType.Swap:
 					var swap = JsonConvert.DeserializeObject<IncomingSwapRequest>(request.JsonData);
-					await _queueListenerService.PutToListenerQueue(swap, id);
+					(await _queueListenerService.PutToListenerQueue(swap, id)).Start();
 					break;
 			}
+			msg = await _incomingQueue.GetRawMessageAsync();
 			await _incomingQueue.FinishRawMessageAsync(msg);
 			return true;
 		}

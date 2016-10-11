@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-run id="0" testcasecount="3" result="Passed" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="1" portable-engine-version="3.3.0.0" start-time="2016-10-11 14:48:54Z" end-time="2016-10-11 14:48:57Z" duration="3.364280">
+  <test-suite type="Assembly" id="1006" name="tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" fullname="tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" runstate="Runnable" testcasecount="3" result="Passed" start-time="2016-10-11 14:48:54Z" end-time="2016-10-11 14:48:57Z" duration="3.191273" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="1">
+    <settings>
+      <setting name="WorkDirectory" value="E:\Projects\EthereumTransactionsHandler\tests" />
+    </settings>
+    <properties>
+      <property name="ParallelScope" value="None" />
+    </properties>
+    <test-suite type="SetUpFixture" id="1000" name="Tests" fullname="Tests.Config" classname="Tests.Config" runstate="Runnable" testcasecount="3" result="Passed" start-time="2016-10-11 14:48:54Z" end-time="2016-10-11 14:48:57Z" duration="3.179567" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="1">
+      <test-suite type="TestFixture" id="1001" name="IncomingRequestTests" fullname="Tests.IncomingRequestTests" classname="Tests.IncomingRequestTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2016-10-11 14:48:54Z" end-time="2016-10-11 14:48:55Z" duration="0.827693" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1002" name="ComplexTest" fullname="Tests.IncomingRequestTests.ComplexTest" methodname="ComplexTest" classname="Tests.IncomingRequestTests" runstate="Runnable" seed="1281665002" result="Passed" start-time="2016-10-11 14:48:54Z" end-time="2016-10-11 14:48:55Z" duration="0.779303" asserts="0" />
+      </test-suite>
+      <test-suite type="TestFixture" id="1003" name="QueueListenerServiceTests" fullname="Tests.QueueListenerServiceTests" classname="Tests.QueueListenerServiceTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2016-10-11 14:48:55Z" end-time="2016-10-11 14:48:57Z" duration="2.109326" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1005" name="TestCoinTransactionsParents" fullname="Tests.QueueListenerServiceTests.TestCoinTransactionsParents" methodname="TestCoinTransactionsParents" classname="Tests.QueueListenerServiceTests" runstate="Runnable" seed="498599727" result="Passed" start-time="2016-10-11 14:48:55Z" end-time="2016-10-11 14:48:57Z" duration="1.616944" asserts="0" />
+        <test-case id="1004" name="TestPutToListenerQueue" fullname="Tests.QueueListenerServiceTests.TestPutToListenerQueue" methodname="TestPutToListenerQueue" classname="Tests.QueueListenerServiceTests" runstate="Runnable" seed="379086715" result="Passed" start-time="2016-10-11 14:48:57Z" end-time="2016-10-11 14:48:57Z" duration="0.484101" asserts="0" />
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

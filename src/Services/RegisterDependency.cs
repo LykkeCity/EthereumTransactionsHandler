@@ -24,10 +24,12 @@ namespace Services
 					provider.GetService<ICoinTransactionRepository>(),
 					provider.GetService<IBaseSettings>(),
 					provider.GetService<ILog>(),
-					provider.GetService<IApiCaller>());
+					provider.GetService<IApiCaller>(),
+					provider.GetService<ITransactionRequestMappingRepository>());
 			});
+			services.AddTransient<IIncomingRequestService, IncomingRequestService>();			
 			services.AddSingleton<ITransactionUpdateService, TransactionUpdateService>();
-			services.AddSingleton<IQueueListenerService, IQueueListenerService>();
+			services.AddSingleton<IQueueListenerService, QueueListenerService>();
 			services.AddTransient<IRestClient, RestClient>();
 			services.AddTransient<IApiCaller, ApiCaller>();
 		}
