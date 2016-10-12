@@ -46,5 +46,10 @@ namespace AzureRepositories.Repositories
 		{
 			return await _table.GetDataAsync(TransactionRequestMappingEntity.Key, transactionHash);
 		}
+
+		public void DeleteTable()
+		{
+			_table.DeleteIfExists();
+		}
 	}
 }

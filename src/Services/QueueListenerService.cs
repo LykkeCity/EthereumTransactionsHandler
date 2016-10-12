@@ -11,6 +11,7 @@ using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Services.Models;
 using Services.Models.Internal;
+using Core.Utils;
 
 namespace Services
 {
@@ -60,6 +61,7 @@ namespace Services
 					Client = clients[0],
 				};
 				await _queueListenerRepository.Insert(dbQueueListener);
+				await _logger.WriteInfo("QueueListenerService", "GetDbQueueListener", "", $"Created new queue listener {dbQueueListener.Name} for client {dbQueueListener.Client}");
 			}
 			return dbQueueListener;
 		}
@@ -82,7 +84,7 @@ namespace Services
 		public IQueueListener CreateAndRunQueueListener(IDbQueueListener dbListener)
 		{
 			var listener = CreateQueueListener(dbListener);
-			listener.Start();			
+			listener.Start();
 			return listener;
 		}
 
@@ -141,7 +143,7 @@ namespace Services
 				Id = id,
 				Action = action,
 				Parents = transactions.GroupBy(o => o.QueueName).Select(o => o.OrderByDescending(x => x.CreateDt).First().RequestId).ToList(),
-				Request = JsonConvert.SerializeObject(data)
+				Request = data.ToJson()
 			};
 			await _sync.WaitAsync();
 			IQueueListener listener = null;
@@ -155,7 +157,8 @@ namespace Services
 					QueueName = listener.Name,
 					ClientA = clients[0],
 					ClientB = clients.Count > 1 ? clients[1] : null,
-					CreateDt = DateTime.UtcNow
+					CreateDt = DateTime.UtcNow,
+					RequestData = request.Request
 				});
 			}
 			catch (StorageException ex)
@@ -176,7 +179,7 @@ namespace Services
 		{
 			if (_runningListeners.ContainsKey(listener.Name))
 				return _runningListeners[listener.Name];
-			var queueListener = _queueListenerFactory(listener.Name);			
+			var queueListener = _queueListenerFactory(listener.Name);
 			_runningListeners.Add(listener.Name, queueListener);
 			return queueListener;
 		}

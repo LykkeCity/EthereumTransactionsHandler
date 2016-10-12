@@ -24,6 +24,9 @@ namespace TransactionHandlerJob.Config
 		private static void RegisterJobs(IServiceCollection collection)
 		{
 			collection.AddSingleton<ProcessIncomingRequestJob>();
+			collection.AddSingleton<MonitoringJob>();
+			collection.AddSingleton<ProcessTransactionEventsJob>();
+			collection.AddSingleton<ShutdownIdleListenersJob>();
 		}
 	}
 }

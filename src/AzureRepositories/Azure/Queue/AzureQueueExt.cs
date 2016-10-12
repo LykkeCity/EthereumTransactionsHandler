@@ -23,6 +23,11 @@ namespace AzureRepositories.Azure.Queue
             _queue.CreateIfNotExistsAsync().Wait();
         }
 
+	    public Task<IEnumerable<CloudQueueMessage>> PeekMessagesAsync(int count)
+	    {
+		    return _queue.PeekMessagesAsync(count);
+	    }
+
 	    public async Task<QueueData> GetMessageAsync()
         {
             var msg = await _queue.GetMessageAsync();
@@ -58,7 +63,7 @@ namespace AzureRepositories.Azure.Queue
         }
 
 	    public async Task PutRawMessageAsync(string message)
-	    {
+	    {			
 			await _queue.AddMessageAsync(new CloudQueueMessage(message));
 		}
 

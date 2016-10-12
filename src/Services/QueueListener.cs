@@ -7,6 +7,7 @@ using Core.Log;
 using Core.Repositories;
 using Core.Settings;
 using Core.Timers;
+using Core.Utils;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using Services.Models;
@@ -19,6 +20,7 @@ namespace Services
 	{
 		void Start();
 		Task Stop(bool force);
+		Task Execute();
 
 		Task PutRequestToQueue(InternalRequest request);
 
@@ -38,14 +40,14 @@ namespace Services
 		private readonly IBaseSettings _baseSettings;
 		private readonly ILog _logger;
 		private readonly IApiCaller _apiCaller;
-		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
+		private readonly ICoinTransactionService _coinTransactionService;
 
 		public bool IsIdle => DateTime.UtcNow - _lastMessage > TimeSpan.FromMinutes(10);
 		public string Name { get; }
 
 		public QueueListener(string name, IQueueExt listenQueue, ICoinTransactionRepository coinTransactionRepository,
 			  IBaseSettings baseSettings, ILog logger, IApiCaller apiCaller,
-			  ITransactionRequestMappingRepository transactionRequestMappingRepository)
+			  ICoinTransactionService coinTransactionService)
 			: base("QueueListener - " + name, PeriodSeconds * 1000, logger)
 		{
 			Name = name;
@@ -54,7 +56,7 @@ namespace Services
 			_baseSettings = baseSettings;
 			_logger = logger;
 			_apiCaller = apiCaller;
-			_transactionRequestMappingRepository = transactionRequestMappingRepository;
+			_coinTransactionService = coinTransactionService;
 		}
 
 		public override async Task Execute()
@@ -67,7 +69,7 @@ namespace Services
 				{
 					_lastMessage = DateTime.UtcNow;
 
-					var request = JsonConvert.DeserializeObject<InternalRequest>(msg.AsString);
+					var request = msg.AsString.DeserializeJson<InternalRequest>();
 					await WaitParentExecution(request.Id, request.Parents);
 					await ExecuteRequest(request);
 					msg = await _listenQueue.GetRawMessageAsync();
@@ -80,7 +82,7 @@ namespace Services
 		{
 			if (requestParents == null || requestParents.Count == 0) return;
 			DateTime start = DateTime.UtcNow;
-			while (requestParents.Count > 0 && Working && DateTime.UtcNow - start < WaitTimeout)
+			while (requestParents.Count > 0 && DateTime.UtcNow - start < WaitTimeout)
 			{
 				foreach (var requestParent in requestParents.ToList())
 				{
@@ -92,9 +94,10 @@ namespace Services
 				if (requestParents.Count > 0)
 					await Task.Delay(100);
 				_lastMessage = DateTime.UtcNow;
+				if (!Working) break;
 			}
 			if (requestParents.Count != 0)
-				throw new Exception($"Parent transacions didn't execute for request {requestId}");
+				throw new Exception($"Parent transactions didn't execute for request {requestId}");
 		}
 
 		private async Task ExecuteRequest(InternalRequest request)
@@ -102,12 +105,7 @@ namespace Services
 			var transaction = await _coinTransactionRepository.GetCoinTransaction(request.Id);
 			if (!string.IsNullOrEmpty(transaction.TransactionHash)) return;
 			transaction.TransactionHash = await DoApiCall(request);
-			await _transactionRequestMappingRepository.InsertTransactionRequestMapping(new TransactionRequestMapping
-			{
-				RequestId = request.Id,
-				TransactionHash = transaction.TransactionHash
-			});
-			await _coinTransactionRepository.SetTransactionHash(transaction);
+			await _coinTransactionService.SetTransactionHash(request.Id, transaction.TransactionHash);
 		}
 
 		private async Task<string> DoApiCall(InternalRequest request)
@@ -115,13 +113,13 @@ namespace Services
 			switch (request.Action)
 			{
 				case RequestType.CashIn:
-					var cashin = JsonConvert.DeserializeObject<IncomingCashInRequest>(request.Request);
+					var cashin = request.Request.DeserializeJson<IncomingCashInRequest>();
 					return await _apiCaller.Cashin(cashin.Coin, cashin.To, cashin.Amount);
 				case RequestType.CashOut:
-					var cashout = JsonConvert.DeserializeObject<IncomingCashOutRequest>(request.Request);
+					var cashout = request.Request.DeserializeJson<IncomingCashOutRequest>();
 					return await _apiCaller.Cashout(cashout.TransactionId, cashout.Coin, cashout.Client, cashout.To, cashout.Amount, cashout.Sign);
 				case RequestType.Swap:
-					var swap = JsonConvert.DeserializeObject<IncomingSwapRequest>(request.Request);
+					var swap = request.Request.DeserializeJson<IncomingSwapRequest>();
 					return await _apiCaller.Swap(swap.TransactionId, swap.ClientA, swap.ClientB, swap.CoinA, swap.CoinB, swap.AmountA,
 								swap.AmountB, swap.SignA, swap.SignB);
 				default:
@@ -131,7 +129,7 @@ namespace Services
 
 		public Task PutRequestToQueue(InternalRequest request)
 		{
-			return _listenQueue.PutRawMessageAsync(JsonConvert.SerializeObject(request));
+			return _listenQueue.PutRawMessageAsync(request.ToJson());
 		}
 
 		public async Task Stop(bool force)

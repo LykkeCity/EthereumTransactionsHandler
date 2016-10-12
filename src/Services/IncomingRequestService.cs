@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureRepositories.Azure.Queue;
 using Core;
+using Core.Utils;
 using Newtonsoft.Json;
 using Services.Models;
 using Services.Models.Internal;
@@ -32,20 +33,20 @@ namespace Services
 			var msg = await _incomingQueue.PeekRawMessageAsync();
 			if (msg == null)
 				return false;
-			var request = JsonConvert.DeserializeObject<IncomingRequest>(msg.AsString);
+			var request = msg.AsString.DeserializeJson<IncomingRequest>();
 			var id = new Guid(msg.Id);
 			switch (request.Action)
 			{
 				case RequestType.CashIn:
-					var cashin = JsonConvert.DeserializeObject<IncomingCashInRequest>(request.JsonData);
+					var cashin = request.JsonData.DeserializeJson<IncomingCashInRequest>();
 					(await _queueListenerService.PutToListenerQueue(cashin, id))?.Start();
 					break;
 				case RequestType.CashOut:
-					var cashout = JsonConvert.DeserializeObject<IncomingCashOutRequest>(request.JsonData);
+					var cashout = request.JsonData.DeserializeJson<IncomingCashOutRequest>();
 					(await _queueListenerService.PutToListenerQueue(cashout, id)).Start();
 					break;
 				case RequestType.Swap:
-					var swap = JsonConvert.DeserializeObject<IncomingSwapRequest>(request.JsonData);
+					var swap = request.JsonData.DeserializeJson<IncomingSwapRequest>();
 					(await _queueListenerService.PutToListenerQueue(swap, id)).Start();
 					break;
 			}

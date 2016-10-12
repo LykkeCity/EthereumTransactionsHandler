@@ -25,13 +25,14 @@ namespace Services
 					provider.GetService<IBaseSettings>(),
 					provider.GetService<ILog>(),
 					provider.GetService<IApiCaller>(),
-					provider.GetService<ITransactionRequestMappingRepository>());
+					provider.GetService<ICoinTransactionService>());
 			});
 			services.AddTransient<IIncomingRequestService, IncomingRequestService>();			
 			services.AddSingleton<ITransactionUpdateService, TransactionUpdateService>();
 			services.AddSingleton<IQueueListenerService, QueueListenerService>();
 			services.AddTransient<IRestClient, RestClient>();
 			services.AddTransient<IApiCaller, ApiCaller>();
+			services.AddTransient<ICoinTransactionService, CoinTransactionService>();
 		}
 	}
 }

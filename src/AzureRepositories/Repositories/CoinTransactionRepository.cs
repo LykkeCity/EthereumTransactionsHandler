@@ -25,6 +25,7 @@ namespace AzureRepositories.Repositories
 		public bool HasChildClientA { get; set; }
 		public bool HasChildClientB { get; set; }
 		public DateTime CreateDt { get; set; }
+		public string RequestData { get; set; }
 
 		public static CoinTransationEntity Create(ICoinTransaction coinTransaction)
 		{
@@ -40,7 +41,8 @@ namespace AzureRepositories.Repositories
 				HasChildClientB = coinTransaction.HasChildClientB,
 				QueueName = coinTransaction.QueueName,
 				PartitionKey = Key,
-				RowKey = coinTransaction.RequestId.ToString()
+				RowKey = coinTransaction.RequestId.ToString(),
+				RequestData = coinTransaction.RequestData
 			};
 			return entity;
 		}

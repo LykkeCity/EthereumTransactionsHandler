@@ -21,5 +21,6 @@ namespace Core.Repositories
     {
 	    Task InsertTransactionRequestMapping(ITransactionRequestMapping mapping);
 	    Task<ITransactionRequestMapping> GetTransactionRequestMapping(string transactionHash);
+	    void DeleteTable();
     }
 }

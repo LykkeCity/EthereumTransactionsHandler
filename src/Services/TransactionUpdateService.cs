@@ -8,6 +8,7 @@ using Core.Log;
 using Core.Repositories;
 using Core.Timers;
 using Core.Timers.Interfaces;
+using Core.Utils;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using Services.Models.Internal;
@@ -21,18 +22,16 @@ namespace Services
 
 	public class TransactionUpdateService : ITransactionUpdateService
 	{
-		private readonly ICoinTransactionRepository _coinTransactionRepository;
-		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
 		private readonly IQueueExt _queue;
 		private readonly ILog _logger;
+		private readonly ICoinTransactionService _coinTransactionService;
 
 		public TransactionUpdateService(ILog logger, Func<string, IQueueExt> queueFactory,
-			ICoinTransactionRepository coinTransactionRepository, ITransactionRequestMappingRepository transactionRequestMappingRepository)
+			ICoinTransactionService coinTransactionService)
 		{
-			_coinTransactionRepository = coinTransactionRepository;
-			_transactionRequestMappingRepository = transactionRequestMappingRepository;
 			_queue = queueFactory(Constants.CoinTransactionQueue);
 			_logger = logger;
+			_coinTransactionService = coinTransactionService;
 		}
 
 		public async Task<bool> GetAndProcessTransactionStatus()
@@ -42,22 +41,16 @@ namespace Services
 			if (msg == null)
 				return false;
 
-			var status = JsonConvert.DeserializeObject<CoinTransactionStatus>(msg.AsString);
-
-			var transactionRequestMapping =
-				await _transactionRequestMappingRepository.GetTransactionRequestMapping(status.TransactionHash);
-			if (transactionRequestMapping == null)
-				await _logger.WriteWarning("TransactionUpdateService", "GetAndProcessTransactionStatus", "", $"Not found request by transaction hash {status.TransactionHash}");
-			else
-				await _coinTransactionRepository.SetTransactionConfirmationLevel(new CoinTransaction
-				{
-					ConfirmaionLevel = status.ConfirmationLevel,
-					Error = status.Error,
-					RequestId = transactionRequestMapping.RequestId
-				});
+			var status = msg.AsString.DeserializeJson<CoinTransactionStatus>();
+			await _logger.WriteInfo("TransactionUpdateService", "GetAndProcessTransactionStatus", "", $"Received new transaction state event \"{msg.AsString}\"");
+			if (!await _coinTransactionService.SetConfirmationLevel(status.TransactionHash, status.ConfirmationLevel, status.Error))
+			{
+				await _queue.PutRawMessageAsync(status.ToJson());
+				await _logger.WriteInfo("TransactionUpdateService", "GetAndProcessTransactionStatus", "",
+						$"Requeue transaction state event \"{msg.AsString}\"");
+			}
 			msg = await _queue.GetRawMessageAsync();
 			await _queue.FinishRawMessageAsync(msg);
-
 			return true;
 		}
 	}

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Core.Log;
 using Core.Settings;
+using Core.Utils;
 using Newtonsoft.Json;
 using RestSharp;
 
@@ -57,7 +58,7 @@ namespace Services
 			{
 				var content = response.Content;
 				await _logger.WriteInfo("ApiCaller", "DoRequest", "", $"Response reqId={reqId}: {content} ");
-				return JsonConvert.DeserializeObject<T>(response.Content);
+				return response.Content.DeserializeJson<T>();
 			}
 			await _logger.WriteError("ApiCaller", "DoRequest", $"reqId={reqId}", response.ErrorException);
 			throw response.ErrorException;

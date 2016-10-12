@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Queue;
 
@@ -33,7 +34,7 @@ namespace AzureRepositories.Azure.Queue
 	    Task<CloudQueueMessage> GetRawMessageAsync();
 	    Task<CloudQueueMessage> PeekRawMessageAsync();
 	    Task FinishRawMessageAsync(CloudQueueMessage message);
-
+	    Task<IEnumerable<CloudQueueMessage>> PeekMessagesAsync(int count);
 
 		Task<QueueData> GetMessageAsync();
         Task FinishMessageAsync(QueueData token);

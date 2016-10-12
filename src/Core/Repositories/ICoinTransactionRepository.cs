@@ -22,6 +22,8 @@ namespace Core.Repositories
 		bool HasChildClientB { get; set; }
 
 		DateTime CreateDt { get; set; }
+
+		string RequestData { get; set; }
 	}
 
 	public class CoinTransaction : ICoinTransaction
@@ -32,10 +34,11 @@ namespace Core.Repositories
 		public bool Error { get; set; }
 		public string ClientA { get; set; }
 		public string ClientB { get; set; }
-		public string QueueName { get; set; }
+		public string QueueName { get; set; }		
 		public bool HasChildClientA { get; set; }
 		public bool HasChildClientB { get; set; }
 		public DateTime CreateDt { get; set; }
+		public string RequestData { get; set; }
 	}
 
 	public interface ICoinTransactionRepository

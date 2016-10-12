@@ -4,7 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureRepositories.Azure.Queue;
 using Core.Repositories;
+using Core.Timers;
+using Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Services;
@@ -65,12 +68,12 @@ namespace Tests
 
 			var msg = await listenerQueue.PeekRawMessageAsync();
 			Assert.NotNull(msg);
-			var req = JsonConvert.DeserializeObject<InternalRequest>(msg.AsString);
+			var req = msg.AsString.DeserializeJson<InternalRequest>();
 			Assert.AreEqual(RequestType.Swap, req.Action);
 			Assert.AreEqual(id, req.Id);
 			Assert.AreEqual(0, req.Parents?.Count ?? 0);
 
-			var requestData = JsonConvert.DeserializeObject<IncomingSwapRequest>(req.Request);
+			var requestData = req.Request.DeserializeJson<IncomingSwapRequest>();
 			Assert.AreEqual(_requestSwap.TransactionId, requestData.TransactionId);
 
 			var coinTransaction = await coinRepo.GetCoinTransaction(req.Id);
@@ -107,10 +110,10 @@ namespace Tests
 			Assert.AreEqual(_requestCashoutClientB.Client, listeners[1].Client);
 
 			var listenerQueue = Config.ListenerQueueFactory(listeners[0].Name);
-			var requestCashin = JsonConvert.DeserializeObject<InternalRequest>((await listenerQueue.GetRawMessageAsync()).AsString);
+			var requestCashin = (await listenerQueue.GetRawMessageAsync()).AsString.DeserializeJson<InternalRequest>();
 			Assert.AreEqual(RequestType.CashIn, requestCashin.Action);
 			Assert.IsEmpty(requestCashin.Parents);
-			var requestCashin2 = JsonConvert.DeserializeObject<InternalRequest>((await listenerQueue.GetRawMessageAsync()).AsString);
+			var requestCashin2 = (await listenerQueue.GetRawMessageAsync()).AsString.DeserializeJson<InternalRequest>();
 
 			Assert.Contains(cashinId, requestCashin2.Parents);
 
@@ -118,9 +121,9 @@ namespace Tests
 
 			listenerQueue = Config.ListenerQueueFactory(swapTransaction.QueueName);
 
-			var requestSwap = JsonConvert.DeserializeObject<InternalRequest>((await listenerQueue.GetRawMessageAsync()).AsString);
+			var requestSwap = (await listenerQueue.GetRawMessageAsync()).AsString.DeserializeJson<InternalRequest>();
 			if (requestSwap.Action != RequestType.Swap)
-				requestSwap = JsonConvert.DeserializeObject<InternalRequest>((await listenerQueue.GetRawMessageAsync()).AsString);
+				requestSwap = (await listenerQueue.GetRawMessageAsync()).AsString.DeserializeJson<InternalRequest>();
 
 			Assert.Contains(cashinId2, requestSwap.Parents);
 			Assert.Contains(cashoutId, requestSwap.Parents);
@@ -135,5 +138,49 @@ namespace Tests
 			coinTransaction = await coinRepo.GetCoinTransaction(cashoutId);
 			Assert.IsTrue(coinTransaction.HasChildClientA);
 		}
+
+		[Test]
+		public async Task TestDuplicateExecutionRequest()
+		{
+			var queueListenerService = Config.Services.GetService<IQueueListenerService>();
+			var coinRepo = Config.Services.GetService<ICoinTransactionRepository>();
+
+			var id = Guid.NewGuid();
+			await queueListenerService.PutToListenerQueue(_requestSwap, id);
+			var listener = await queueListenerService.PutToListenerQueue(_requestSwap, id);
+			await listener.Execute();
+
+			await coinRepo.SetTransactionConfirmationLevel(new CoinTransaction { RequestId = id, ConfirmaionLevel = 3, Error = false });
+
+			await listener.Execute();
+
+			Assert.AreEqual(0, await Config.ListenerQueueFactory(listener.Name).Count());
+		}
+
+		[Test]
+		public async Task TestWaitParentExecution()
+		{
+			var queueListenerService = Config.Services.GetService<IQueueListenerService>();
+			var coinRepo = Config.Services.GetService<ICoinTransactionRepository>();
+
+			var id = Guid.NewGuid();
+			var swapId = Guid.NewGuid();
+			await queueListenerService.PutToListenerQueue(_requestCashInClientA, id);
+			var listener = await queueListenerService.PutToListenerQueue(_requestSwap, swapId);
+			await listener.Execute();
+
+			// ReSharper disable once PossibleNullReferenceException
+			(listener as TimerPeriod).Working = true;
+
+			var taskSwap = listener.Execute();
+
+			await Task.Delay(1000);
+			Assert.IsFalse(taskSwap.IsCompleted);
+			await coinRepo.SetTransactionConfirmationLevel(new CoinTransaction { RequestId = id, ConfirmaionLevel = 3, Error = false });
+			taskSwap.Wait();
+			Assert.IsTrue(taskSwap.IsCompleted);
+			Assert.AreEqual(0, await Config.ListenerQueueFactory(listener.Name).Count());
+		}
+
 	}
 }

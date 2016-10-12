@@ -24,7 +24,7 @@ namespace Core.Timers
 			_log = log;
 		}
 
-		public bool Working { get; private set; }
+		public bool Working { get; set; }
 
 		private void LogFatalError(Exception exception)
 		{
