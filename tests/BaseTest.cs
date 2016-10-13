@@ -31,6 +31,7 @@ namespace Tests
 			await queueFactory(Constants.CoinEventQueue).ClearAsync();
 			await queueFactory(Constants.CoinIncomingRequestsQueue).ClearAsync();
 			await queueFactory(Constants.CoinTransactionQueue).ClearAsync();
+			await queueFactory(Constants.EmailNotifierQueue).ClearAsync();
 
 			Console.WriteLine("Setup test");
 		}

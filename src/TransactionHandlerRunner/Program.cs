@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Core.Settings;
 using TransactionHandlerJob;
@@ -10,8 +11,9 @@ namespace TransactionHandlerRunner
 {
     public class Program
     {
+	    static JobApp JobApp { get; set; }
 
-		public static void Main(string[] args)
+	    public static void Main(string[] args)
 		{
 			Console.Clear();
 			Console.Title = "Ethereum Web Job - Ver. " + Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion;
@@ -40,8 +42,8 @@ namespace TransactionHandlerRunner
 
 			try
 			{
-				var app = new JobApp();
-				app.Run(settings);
+				JobApp = new JobApp();
+				JobApp.Run(settings);
 			}
 			catch (Exception e)
 			{
@@ -56,7 +58,11 @@ namespace TransactionHandlerRunner
 
 			Console.WriteLine("Press 'q' to quit.");
 
+			SetConsoleCtrlHandler(ConsoleCtrlCheck, true);
+
 			while (Console.ReadLine() != "q") continue;
+
+			JobApp.Stop().Wait();
 		}
 
 		static BaseSettings GetSettings()
@@ -103,6 +109,26 @@ namespace TransactionHandlerRunner
 				throw new Exception("ExchangeQueueConnString is missing");
 			if (string.IsNullOrWhiteSpace(settings.Db?.EthereumNotificationsConnString))
 				throw new Exception("EthereumNotificationsConnString is missing");
+		}
+
+		[DllImport("kernel32")]
+		public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
+
+		public delegate bool HandlerRoutine(CtrlTypes ctrlType);
+
+		public enum CtrlTypes
+		{
+			CTRL_C_EVENT = 0,
+			CTRL_BREAK_EVENT,
+			CTRL_CLOSE_EVENT,
+			CTRL_LOGOFF_EVENT = 5,
+			CTRL_SHUTDOWN_EVENT
+		}
+
+		private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
+		{
+			JobApp.Stop().Wait();
+			return true;
 		}
 	}
 }

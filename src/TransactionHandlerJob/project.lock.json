@@ -151,6 +151,23 @@
           }
         }
       },
+      "Microsoft.Extensions.DependencyInjection/1.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0",
+          "System.Collections": "4.0.11",
+          "System.Collections.Concurrent": "4.0.12",
+          "System.Runtime.Extensions": "4.1.0",
+          "System.Threading": "4.0.11",
+          "System.Threading.Tasks": "4.0.11"
+        },
+        "compile": {
+          "lib/netstandard1.1/Microsoft.Extensions.DependencyInjection.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.1/Microsoft.Extensions.DependencyInjection.dll": {}
+        }
+      },
       "Microsoft.Extensions.DependencyInjection.Abstractions/1.0.0": {
         "type": "package",
         "dependencies": {
@@ -2004,6 +2021,17 @@
         "lib/sl4/zh-Hant/Microsoft.Data.Services.Client.resources.dll"
       ]
     },
+    "Microsoft.Extensions.DependencyInjection/1.0.0": {
+      "sha512": "zdtkiZNV6LB8xtpmfyUjP/9N9ZCL/ydQ+0bfjun38fbrk+MDEm9M2yeLzRdq+OIt5xExw/KU04wFaVwJ1bhQPg==",
+      "type": "package",
+      "path": "Microsoft.Extensions.DependencyInjection/1.0.0",
+      "files": [
+        "Microsoft.Extensions.DependencyInjection.1.0.0.nupkg.sha512",
+        "Microsoft.Extensions.DependencyInjection.nuspec",
+        "lib/netstandard1.1/Microsoft.Extensions.DependencyInjection.dll",
+        "lib/netstandard1.1/Microsoft.Extensions.DependencyInjection.xml"
+      ]
+    },
     "Microsoft.Extensions.DependencyInjection.Abstractions/1.0.0": {
       "sha512": "+XwaNo3o9RhLQhUnnOBCaukeRi1X9yYc0Fzye9RlErSflKZdw0VgHtn6rvKo0FTionsW0x8QVULhKH+nkqVjQA==",
       "type": "package",
@@ -2091,7 +2119,7 @@
       ]
     },
     "Nethereum.ABI/1.0.0": {
-      "sha512": "SEuEzmnliNrOvv6jQny27ihDoSX3AonDwH9laAbv52AJ1Gt/TTG8KXPr1iVzP1glApOFKatRKu1rJLjW9x+tWQ==",
+      "sha512": "HbcniNBxKcZpYCicXCkSq9cN1PKTM26MFh1TK2iz5LwS6kXoNALiCDd2JMU1G2SpRMGocBbRMjudMQ4+itBq+g==",
       "type": "package",
       "path": "Nethereum.ABI/1.0.0",
       "files": [
@@ -2104,7 +2132,7 @@
       ]
     },
     "Nethereum.Hex/1.0.0": {
-      "sha512": "lk90Gnzm5xMeg2N/NkQvAId/ZKX3IAN+jmxd/daoFnK13dApg/FnEiNrK0Nw0GNSvAPjytAtfwOjuQ9iQzhoYA==",
+      "sha512": "9ScoJsJIjwCItezzGCZoji/DcIIPzKlsMGz0sPuVAZFkHa/JKDCVVkOEjiiPAxbL0HK2ZVpfA6X6v8P7Jagdew==",
       "type": "package",
       "path": "Nethereum.Hex/1.0.0",
       "files": [
@@ -2198,7 +2226,7 @@
       ]
     },
     "RestSharp.NetCore/105.2.3": {
-      "sha512": "Lcekx/sH9WEX6yFlQGIs8Mubq7YI9W7HV447qhxjHoeF0vu3wDAK/RQvOA0/D+Bn0b+dTZHVeSAqV2jx8YMlzg==",
+      "sha512": "XAutnXRVeS6Nhqjzg1l0OUOEWWLUDl4ZUvopMTRea0N3qiX+lD1U1Z5HrdyNwLX3eUUHI1w6h1DfEWEIe8JUSA==",
       "type": "package",
       "path": "RestSharp.NetCore/105.2.3",
       "files": [
@@ -5864,6 +5892,7 @@
     "": [
       "AzureRepositories >= 1.0.0",
       "Core >= 1.0.0",
+      "Microsoft.Extensions.DependencyInjection >= 1.0.0",
       "Microsoft.Extensions.DependencyInjection.Abstractions >= 1.0.0",
       "Microsoft.Extensions.PlatformAbstractions >= 1.0.0",
       "NETStandard.Library >= 1.6.0",

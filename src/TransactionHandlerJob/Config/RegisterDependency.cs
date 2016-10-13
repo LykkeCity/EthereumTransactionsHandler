@@ -12,7 +12,7 @@ namespace TransactionHandlerJob.Config
 		{
 			collection.AddSingleton(settings);
 
-			collection.RegisterAzureLogs(settings, "Job");
+			collection.RegisterAzureLogs(settings, "TransactionHandler");
 			collection.RegisterAzureStorages(settings);
 			collection.RegisterAzureQueues(settings);
 

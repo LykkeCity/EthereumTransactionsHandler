@@ -26,6 +26,7 @@ namespace Services
 		Task<IQueueListener> PutToListenerQueue(IncomingCashOutRequest cashout, Guid id);
 		Task<IQueueListener> PutToListenerQueue(IncomingSwapRequest swap, Guid id);
 		Task ShutdownIdleListeners(bool force = false);
+		Task PauseListeners();
 	}
 
 	public class QueueListenerService : IQueueListenerService
@@ -125,6 +126,30 @@ namespace Services
 						{
 							await _logger.WriteError("QeueuListenerService", "ShutdownIdleListeners", $"Queue name = {runningListener.Name}", e);
 						}
+					}
+				}
+			}
+			finally
+			{
+				_sync.Release();
+			}
+		}
+
+		public async Task PauseListeners()
+		{
+			await _sync.WaitAsync();
+			try
+			{
+				foreach (var runningListener in _runningListeners.Select(o => o.Value).ToList())
+				{
+					try
+					{
+						await runningListener.Pause();
+					}
+					catch (Exception e)
+					{
+						await
+							_logger.WriteError("QeueuListenerService", "PauseListeners", $"Queue name = {runningListener.Name}", e);
 					}
 				}
 			}

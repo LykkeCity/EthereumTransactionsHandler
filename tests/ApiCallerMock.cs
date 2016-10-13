@@ -8,17 +8,17 @@ namespace Tests
 {
 	public class ApiCallerMock : IApiCaller
 	{
-		public Task<string> Cashin(string coin, string to, decimal amount)
+		public Task<string> Cashin(Guid requestId, Guid id, string coin, string to, decimal amount)
 		{
 			return Task.FromResult(Guid.NewGuid().ToString());
 		}
 
-		public Task<string> Cashout(Guid id, string coin, string client, string to, decimal amount, string sign)
+		public Task<string> Cashout(Guid requestId, Guid id, string coin, string client, string to, decimal amount, string sign)
 		{
 			return Task.FromResult(Guid.NewGuid().ToString());
 		}
 
-		public Task<string> Swap(Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,
+		public Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,
 			string signA, string signB)
 		{
 			return Task.FromResult(Guid.NewGuid().ToString());

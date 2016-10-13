@@ -16,10 +16,10 @@ namespace Services
 
 	public interface IApiCaller
 	{
-		Task<string> Cashin(string coin, string to, decimal amount);
-		Task<string> Cashout(Guid id, string coin, string client, string to, decimal amount, string sign);
+		Task<string> Cashin(Guid requestId, Guid id, string coin, string to, decimal amount);
+		Task<string> Cashout(Guid requestId, Guid id, string coin, string client, string to, decimal amount, string sign);
 
-		Task<string> Swap(Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA,
+		Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA,
 			decimal amountB, string signA, string signB);
 	}
 
@@ -64,16 +64,18 @@ namespace Services
 			throw response.ErrorException;
 		}
 
-		public async Task<string> Cashin(string coin, string to, decimal amount)
+		public async Task<string> Cashin(Guid requestId, Guid id, string coin, string to, decimal amount)
 		{
 			var request = new RestRequest(new Uri("/api/coin/cashin"), Method.POST);
+			request.AddParameter("id", id);
 			request.AddParameter("coin", coin);
 			request.AddParameter("receiver", to);
 			request.AddParameter("amount", amount);
+			request.AddParameter("requestId", requestId);
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 		}
 
-		public async Task<string> Cashout(Guid id, string coin, string client, string to, decimal amount, string sign)
+		public async Task<string> Cashout(Guid requestId, Guid id, string coin, string client, string to, decimal amount, string sign)
 		{
 			var request = new RestRequest(new Uri("/api/coin/cashout"), Method.POST);
 			request.AddParameter("id", id);
@@ -81,11 +83,12 @@ namespace Services
 			request.AddParameter("to", to);
 			request.AddParameter("amount", amount);
 			request.AddParameter("sign", sign);
+			request.AddParameter("requestId", requestId);
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 
 		}
 
-		public async Task<string> Swap(Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,
+		public async Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,
 			string signA, string signB)
 		{
 			var request = new RestRequest(new Uri("/api/coin/swap"), Method.POST);
@@ -98,6 +101,7 @@ namespace Services
 			request.AddParameter("amountB", amountB);
 			request.AddParameter("signA", signA);
 			request.AddParameter("signB", signB);
+			request.AddParameter("requestId", requestId);
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 		}
 	}

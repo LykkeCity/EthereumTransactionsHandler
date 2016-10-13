@@ -3,14 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
+using Services;
+using TransactionHandlerJob.Config;
+using TransactionHandlerJob.Jobs;
 
 namespace TransactionHandlerJob
 {
     public class JobApp
     {
-	    public void Run(IBaseSettings settings)
-	    {
+		public IServiceProvider Services { get; set; }
 
+		public void Run(IBaseSettings settings)
+	    {
+			IServiceCollection collection = new ServiceCollection();
+			collection.InitJobDependencies(settings);
+
+			Services = collection.BuildServiceProvider();
+
+			// start monitoring
+			Services.GetService<MonitoringJob>().Start();
+		    Services.GetService<ProcessIncomingRequestJob>().Start();
+		    Services.GetService<ProcessTransactionEventsJob>().Start();
+		    Services.GetService<ShutdownIdleListenersJob>().Start();
 	    }
+
+		public async Task Stop()
+		{
+			await Services.GetService<ProcessIncomingRequestJob>().Stop();
+			await Services.GetService<ProcessTransactionEventsJob>().Stop();
+			await Services.GetService<ShutdownIdleListenersJob>().Stop();
+
+			// pause all listeners
+			await Services.GetService<IQueueListenerService>().PauseListeners();
+
+			await Services.GetService<MonitoringJob>().Stop();
+		}
     }
 }

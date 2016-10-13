@@ -11,5 +11,6 @@ namespace Services.Models
 		public string To { get; set; }
 
 		public decimal Amount { get; set; }
+	    public Guid TransactionId { get; set; }
     }
 }

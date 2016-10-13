@@ -3102,6 +3102,7 @@
         "dependencies": {
           "AzureRepositories": "1.0.0",
           "Core": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection": "1.0.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "1.0.0",
           "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
           "NETStandard.Library": "1.6.0",
@@ -3140,7 +3141,7 @@
       ]
     },
     "dotnet-test-nunit/3.4.0-beta-2": {
-      "sha512": "za5Bip/Ollig+8pwQi/Lrvi0oVaoBYf2oMrha8+vjfyBWGAa0kSFMCVgrGTt2JyzrYtk9SKzwG3OLHQKuXcwlg==",
+      "sha512": "ImRqxsZMFzn+bM33emu5ZMzIUe8GOHPxdA2NkUIsawWd4YjvcFzdIo5iNuejlY0lw1M+RMwRbpd/cKkhKft52g==",
       "type": "package",
       "path": "dotnet-test-nunit/3.4.0-beta-2",
       "files": [
@@ -3779,7 +3780,7 @@
       ]
     },
     "Nethereum.ABI/1.0.0": {
-      "sha512": "SEuEzmnliNrOvv6jQny27ihDoSX3AonDwH9laAbv52AJ1Gt/TTG8KXPr1iVzP1glApOFKatRKu1rJLjW9x+tWQ==",
+      "sha512": "HbcniNBxKcZpYCicXCkSq9cN1PKTM26MFh1TK2iz5LwS6kXoNALiCDd2JMU1G2SpRMGocBbRMjudMQ4+itBq+g==",
       "type": "package",
       "path": "Nethereum.ABI/1.0.0",
       "files": [
@@ -3792,7 +3793,7 @@
       ]
     },
     "Nethereum.Hex/1.0.0": {
-      "sha512": "lk90Gnzm5xMeg2N/NkQvAId/ZKX3IAN+jmxd/daoFnK13dApg/FnEiNrK0Nw0GNSvAPjytAtfwOjuQ9iQzhoYA==",
+      "sha512": "9ScoJsJIjwCItezzGCZoji/DcIIPzKlsMGz0sPuVAZFkHa/JKDCVVkOEjiiPAxbL0HK2ZVpfA6X6v8P7Jagdew==",
       "type": "package",
       "path": "Nethereum.Hex/1.0.0",
       "files": [
@@ -3958,7 +3959,7 @@
       ]
     },
     "NUnit.Portable.Agent/3.4.0-beta-2": {
-      "sha512": "ybpAVygz7TMj5FKvR/xnYncDOwwZ7omHFbwVRBVMHee5N8AIP2gebNVWPY4DoHFoJwtE2eZ/oBQBtf3/hiLx5w==",
+      "sha512": "91XarG692I/gCwDi3d1k5tRc1J4mPo6l6nHrYRKWSgc9M2a0SX1YNS/uJwth3bXQEn+499mdZ02NTuvJstRq1A==",
       "type": "package",
       "path": "NUnit.Portable.Agent/3.4.0-beta-2",
       "files": [
@@ -4015,7 +4016,7 @@
       ]
     },
     "RestSharp.NetCore/105.2.3": {
-      "sha512": "Lcekx/sH9WEX6yFlQGIs8Mubq7YI9W7HV447qhxjHoeF0vu3wDAK/RQvOA0/D+Bn0b+dTZHVeSAqV2jx8YMlzg==",
+      "sha512": "XAutnXRVeS6Nhqjzg1l0OUOEWWLUDl4ZUvopMTRea0N3qiX+lD1U1Z5HrdyNwLX3eUUHI1w6h1DfEWEIe8JUSA==",
       "type": "package",
       "path": "RestSharp.NetCore/105.2.3",
       "files": [

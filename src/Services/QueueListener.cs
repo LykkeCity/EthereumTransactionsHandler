@@ -26,12 +26,14 @@ namespace Services
 
 		bool IsIdle { get; }
 		string Name { get; }
+		Task Pause();
 	}
 
 	public class QueueListener : TimerPeriod, IQueueListener
 	{
 		private const int PeriodSeconds = 2;
 		private static readonly TimeSpan WaitTimeout = TimeSpan.FromMinutes(10);
+		private const int ErrorNotifyPeriodMinutes = 10;
 
 		private DateTime _lastMessage = DateTime.UtcNow;
 
@@ -41,13 +43,14 @@ namespace Services
 		private readonly ILog _logger;
 		private readonly IApiCaller _apiCaller;
 		private readonly ICoinTransactionService _coinTransactionService;
+		private readonly IEmailNotifierService _emailNotifier;
 
 		public bool IsIdle => DateTime.UtcNow - _lastMessage > TimeSpan.FromMinutes(10);
 		public string Name { get; }
 
 		public QueueListener(string name, IQueueExt listenQueue, ICoinTransactionRepository coinTransactionRepository,
 			  IBaseSettings baseSettings, ILog logger, IApiCaller apiCaller,
-			  ICoinTransactionService coinTransactionService)
+			  ICoinTransactionService coinTransactionService, IEmailNotifierService emailNotifier)
 			: base("QueueListener - " + name, PeriodSeconds * 1000, logger)
 		{
 			Name = name;
@@ -57,6 +60,7 @@ namespace Services
 			_logger = logger;
 			_apiCaller = apiCaller;
 			_coinTransactionService = coinTransactionService;
+			_emailNotifier = emailNotifier;
 		}
 
 		public override async Task Execute()
@@ -82,14 +86,25 @@ namespace Services
 		{
 			if (requestParents == null || requestParents.Count == 0) return;
 			DateTime start = DateTime.UtcNow;
+			int retries = 0;
 			while (requestParents.Count > 0 && DateTime.UtcNow - start < WaitTimeout)
 			{
 				foreach (var requestParent in requestParents.ToList())
 				{
-					//TODO: check error flag of parent transaction
 					var transaction = await _coinTransactionRepository.GetCoinTransaction(requestParent);
+
+					if (transaction.Error)
+					{
+						if (retries % (ErrorNotifyPeriodMinutes * 60 * 10) == 0)
+							_emailNotifier.Warning("Ethereum transaction error", $"Transaction is failed! Request id: [{transaction.RequestId}]");
+
+						retries++;
+					}
+
 					if (transaction?.ConfirmaionLevel >= _baseSettings.MinTransactionConfirmaionLevel)
 						requestParents.Remove(requestParent);
+
+
 				}
 				if (requestParents.Count > 0)
 					await Task.Delay(100);
@@ -104,8 +119,13 @@ namespace Services
 		{
 			var transaction = await _coinTransactionRepository.GetCoinTransaction(request.Id);
 			if (!string.IsNullOrEmpty(transaction.TransactionHash)) return;
+
+			await _logger.WriteInfo("QueueListener", "ExecuteRequest", "", $"Start execute request [{request.Id}]");
+
 			transaction.TransactionHash = await DoApiCall(request);
 			await _coinTransactionService.SetTransactionHash(request.Id, transaction.TransactionHash);
+
+			await _logger.WriteInfo("QueueListener", "ExecuteRequest", "", $"Request executed [{request.Id}]");
 		}
 
 		private async Task<string> DoApiCall(InternalRequest request)
@@ -114,13 +134,13 @@ namespace Services
 			{
 				case RequestType.CashIn:
 					var cashin = request.Request.DeserializeJson<IncomingCashInRequest>();
-					return await _apiCaller.Cashin(cashin.Coin, cashin.To, cashin.Amount);
+					return await _apiCaller.Cashin(request.Id, cashin.TransactionId, cashin.Coin, cashin.To, cashin.Amount);
 				case RequestType.CashOut:
 					var cashout = request.Request.DeserializeJson<IncomingCashOutRequest>();
-					return await _apiCaller.Cashout(cashout.TransactionId, cashout.Coin, cashout.Client, cashout.To, cashout.Amount, cashout.Sign);
+					return await _apiCaller.Cashout(request.Id, cashout.TransactionId, cashout.Coin, cashout.Client, cashout.To, cashout.Amount, cashout.Sign);
 				case RequestType.Swap:
 					var swap = request.Request.DeserializeJson<IncomingSwapRequest>();
-					return await _apiCaller.Swap(swap.TransactionId, swap.ClientA, swap.ClientB, swap.CoinA, swap.CoinB, swap.AmountA,
+					return await _apiCaller.Swap(request.Id, swap.TransactionId, swap.ClientA, swap.ClientB, swap.CoinA, swap.CoinB, swap.AmountA,
 								swap.AmountB, swap.SignA, swap.SignB);
 				default:
 					throw new ArgumentException("Unexpected request action");
@@ -139,6 +159,11 @@ namespace Services
 				throw new Exception("Cant stop listener. Queue is not empty.");
 			await base.Stop();
 			_listenQueue.DeleteIfExists();
+		}
+
+		public async Task Pause()
+		{
+			await base.Stop();
 		}
 	}
 }
