@@ -60,30 +60,39 @@ namespace Services
 				await _logger.WriteInfo("ApiCaller", "DoRequest", "", $"Response reqId={reqId}: {content} ");
 				return response.Content.DeserializeJson<T>();
 			}
-			await _logger.WriteError("ApiCaller", "DoRequest", $"reqId={reqId}", response.ErrorException);
-			throw response.ErrorException;
+			var exception = response.ErrorException ?? new Exception(response.Content);
+			await _logger.WriteError("ApiCaller", "DoRequest", $"reqId={reqId}", exception);
+			throw exception;
 		}
 
 		public async Task<string> Cashin(Guid requestId, Guid id, string coin, string to, decimal amount)
 		{
-			var request = new RestRequest(new Uri("/api/coin/cashin"), Method.POST);
-			request.AddParameter("id", id);
-			request.AddParameter("coin", coin);
-			request.AddParameter("receiver", to);
-			request.AddParameter("amount", amount);
-			request.AddParameter("requestId", requestId);
+			var request = new RestRequest("/api/coin/cashin", Method.POST);
+			request.AddJsonBody(new
+			{
+				id = id,
+				coin = coin,
+				receiver = to,
+				amount = amount,
+				requestId = requestId
+			});
+
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 		}
 
 		public async Task<string> Cashout(Guid requestId, Guid id, string coin, string client, string to, decimal amount, string sign)
 		{
-			var request = new RestRequest(new Uri("/api/coin/cashout"), Method.POST);
-			request.AddParameter("id", id);
-			request.AddParameter("coin", coin);
-			request.AddParameter("to", to);
-			request.AddParameter("amount", amount);
-			request.AddParameter("sign", sign);
-			request.AddParameter("requestId", requestId);
+			var request = new RestRequest("/api/coin/cashout", Method.POST);
+			request.AddJsonBody(new
+			{
+				id = id,
+				coin = coin,
+				client = client,
+				to = to,
+				amount = amount,
+				sign = sign,
+				requestId = requestId
+			});
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 
 		}
@@ -91,17 +100,20 @@ namespace Services
 		public async Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,
 			string signA, string signB)
 		{
-			var request = new RestRequest(new Uri("/api/coin/swap"), Method.POST);
-			request.AddParameter("id", id);
-			request.AddParameter("clientA", clientA);
-			request.AddParameter("clientB", clientB);
-			request.AddParameter("coinA", coinA);
-			request.AddParameter("coinB", coinB);
-			request.AddParameter("amountA", amountA);
-			request.AddParameter("amountB", amountB);
-			request.AddParameter("signA", signA);
-			request.AddParameter("signB", signB);
-			request.AddParameter("requestId", requestId);
+			var request = new RestRequest("/api/coin/swap", Method.POST);
+			request.AddJsonBody(new
+			{
+				id = id,
+				clientA = clientA,
+				clientB = clientB,
+				coinA = coinA,
+				coinB = coinB,
+				amountA = amountA,
+				amountB = amountB,
+				signA = signA,
+				signB = signB,
+				requestId = requestId
+			});
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 		}
 	}

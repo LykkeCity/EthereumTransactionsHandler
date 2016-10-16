@@ -74,7 +74,11 @@ namespace Services
 			{
 				var listeners = await _queueListenerRepository.GetListeners();
 				foreach (var dbQueueListener in listeners)
+				{
 					CreateAndRunQueueListener(dbQueueListener);
+					await
+						_logger.WriteInfo("QueueListenerService", "StartupListeners", "", $"Started listener \"{dbQueueListener.Name}\"");
+				}
 			}
 			finally
 			{

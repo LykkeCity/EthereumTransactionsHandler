@@ -21,7 +21,8 @@ namespace TransactionHandlerJob
 
 			Services = collection.BuildServiceProvider();
 
-			// start monitoring
+		    Services.GetService<IQueueListenerService>().StartupListeners();
+			// start monitoring		
 			Services.GetService<MonitoringJob>().Start();
 		    Services.GetService<ProcessIncomingRequestJob>().Start();
 		    Services.GetService<ProcessTransactionEventsJob>().Start();
