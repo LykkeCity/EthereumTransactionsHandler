@@ -24,6 +24,7 @@ namespace Services
 					provider.GetService<ILog>(),
 					provider.GetService<IApiCaller>(),
 					provider.GetService<ICoinTransactionService>(),
+					provider.GetService<ICoinRepository>(),
 					provider.GetService<IEmailNotifierService>());
 			});
 			services.AddTransient<IIncomingRequestService, IncomingRequestService>();			

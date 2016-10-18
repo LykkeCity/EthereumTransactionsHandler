@@ -45,6 +45,16 @@ namespace AzureRepositories
 			new AzureTableStorage<TransactionRequestMappingEntity>(settings.Db.DataConnString,
 				Constants.StoragePrefix + Constants.TransactionRequestMappingTable,
 				provider.GetService<ILog>()))));
+
+			services.AddSingleton<ICoinRepository>((provider => new CoinRepository(
+			new AzureTableStorage<CoinEntity>(settings.Db.EthereumNotificationsConnString,
+				Constants.StoragePrefix + Constants.CoinTable,
+				provider.GetService<ILog>()))));
+
+			services.AddSingleton<IConfirmationRequestRepository>((provider => new ConfirmationRequestRepository(
+			new AzureTableStorage<ConfirmationRequestEntity>(settings.Db.DataConnString,
+				Constants.StoragePrefix + Constants.ConfirmationRequestTable,
+				provider.GetService<ILog>()))));
 		}
 
 		public static void RegisterAzureQueues(this IServiceCollection services, IBaseSettings settings)
@@ -73,6 +83,10 @@ namespace AzureRepositories
 							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);
 						case Constants.EmailNotifierQueue:
 							return new AzureQueueExt(settings.Db.ExchangeQueueConnString, Constants.StoragePrefix + x);
+						case Constants.ConfirmationRequestIncomeQueue:
+							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);
+						case Constants.ConfirmationRequestOutQueue:
+							return new AzureQueueExt(settings.Db.EthereumNotificationsConnString, Constants.StoragePrefix + x);
 						default:
 							throw new Exception("Queue is not registered");
 					}

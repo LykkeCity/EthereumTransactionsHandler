@@ -21,6 +21,9 @@ namespace AzureRepositories.Repositories
 		public string ClientA { get; set; }
 		public string ClientB { get; set; }
 
+		public string SignA { get; set; }
+		public string SignB { get; set; }
+
 		public string QueueName { get; set; }
 		public bool HasChildClientA { get; set; }
 		public bool HasChildClientB { get; set; }
@@ -33,6 +36,10 @@ namespace AzureRepositories.Repositories
 			{
 				ClientA = coinTransaction.ClientA,
 				ClientB = coinTransaction.ClientB,
+
+				SignA = coinTransaction.SignA,
+				SignB = coinTransaction.SignB,
+
 				TransactionHash = coinTransaction.TransactionHash,
 				ConfirmaionLevel = coinTransaction.ConfirmaionLevel,
 				CreateDt = coinTransaction.CreateDt,
@@ -117,6 +124,18 @@ namespace AzureRepositories.Repositories
 		public void DeleteTable()
 		{
 			_table.DeleteIfExists();
+		}
+
+		public async Task SetSignature(Guid requestId, string client, string signature)
+		{
+			await _table.ReplaceAsync(CoinTransationEntity.Key, requestId.ToString(), entity =>
+			{
+				if (entity.ClientA == client)
+					entity.SignA = signature;
+				if (entity.ClientB == client)
+					entity.SignB = signature;
+				return entity;
+			});
 		}
 	}
 }

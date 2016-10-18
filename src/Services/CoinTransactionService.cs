@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureRepositories.Azure.Queue;
+using Core;
 using Core.Log;
 using Core.Repositories;
+using Core.Utils;
 
 namespace Services
 {
@@ -11,6 +14,8 @@ namespace Services
 	{
 		Task<bool> SetConfirmationLevel(string transactionHash, int level, bool error);
 		Task SetTransactionHash(Guid requestId, string transactionHash);
+		Task RequestClientConfirmation(Guid requestId, string client, string hash);
+		Task<bool> ProcessClientConfirmation();
 	}
 
 
@@ -18,14 +23,21 @@ namespace Services
 	{
 		private readonly ICoinTransactionRepository _coinTransactionRepository;
 		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
+		private readonly IConfirmationRequestRepository _confirmationRequestRepository;
 		private readonly ILog _logger;
+		private readonly IQueueExt _confirmationRequestOutQueue;
+		private readonly IQueueExt _confirmationRequestIncomeQueue;
 
 		public CoinTransactionService(ICoinTransactionRepository coinTransactionRepository,
-			ITransactionRequestMappingRepository transactionRequestMappingRepository,
-			ILog logger)
+			ITransactionRequestMappingRepository transactionRequestMappingRepository, IConfirmationRequestRepository confirmationRequestRepository,
+			Func<string, IQueueExt> queueFactory, ILog logger)
 		{
 			_coinTransactionRepository = coinTransactionRepository;
 			_transactionRequestMappingRepository = transactionRequestMappingRepository;
+			_confirmationRequestRepository = confirmationRequestRepository;
+
+			_confirmationRequestOutQueue = queueFactory(Constants.ConfirmationRequestOutQueue);
+			_confirmationRequestIncomeQueue = queueFactory(Constants.ConfirmationRequestIncomeQueue);
 			_logger = logger;
 		}
 
@@ -49,8 +61,6 @@ namespace Services
 
 		public async Task SetTransactionHash(Guid requestId, string transactionHash)
 		{
-
-
 			await _transactionRequestMappingRepository.InsertTransactionRequestMapping(new TransactionRequestMapping
 			{
 				RequestId = requestId,
@@ -61,6 +71,38 @@ namespace Services
 				RequestId = requestId,
 				TransactionHash = transactionHash
 			});
+		}
+
+		public async Task RequestClientConfirmation(Guid requestId, string client, string hash)
+		{
+			var confirmation = await _confirmationRequestRepository.GetConfirmationRequest(requestId, client);
+			if (confirmation != null) return;
+			await _confirmationRequestOutQueue.PutRawMessageAsync(new { requestId = requestId, client = client, hash = hash }.ToJson());
+			await _confirmationRequestRepository.InsertConfirmationRequest(new ConfirmationRequest
+			{
+				Client = client,
+				RequestId = requestId
+			});
+		}
+
+		public async Task<bool> ProcessClientConfirmation()
+		{
+			var msg = await _confirmationRequestIncomeQueue.GetRawMessageAsync();
+			if (msg == null) return false;
+			var clientSignature = msg.AsString.DeserializeJson<ClientSignature>();
+			await _logger.WriteInfo("CoinTransactionService", "ProcessClientConfirmation", "",
+					$"New signature from client RequestId={clientSignature.RequestId}, Client={clientSignature.Client}");
+			await _coinTransactionRepository.SetSignature(clientSignature.RequestId, clientSignature.Client, clientSignature.Signature);
+			await _confirmationRequestIncomeQueue.FinishRawMessageAsync(msg);
+			return true;
+		}
+
+		// ReSharper disable once ClassNeverInstantiated.Local
+		private class ClientSignature
+		{
+			public string Client { get; set; }
+			public Guid RequestId { get; set; }
+			public string Signature { get; set; }
 		}
 	}
 }

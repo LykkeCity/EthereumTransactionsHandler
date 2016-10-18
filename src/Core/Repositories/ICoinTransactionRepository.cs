@@ -18,6 +18,9 @@ namespace Core.Repositories
 		string ClientA { get; set; }
 		string ClientB { get; set; }
 
+		string SignA { get; set; }
+		string SignB { get; set; }
+
 		bool HasChildClientA { get; set; }
 		bool HasChildClientB { get; set; }
 
@@ -29,14 +32,21 @@ namespace Core.Repositories
 	public class CoinTransaction : ICoinTransaction
 	{
 		public Guid RequestId { get; set; }
+		public string QueueName { get; set; }
+
 		public string TransactionHash { get; set; }
 		public int ConfirmaionLevel { get; set; }
 		public bool Error { get; set; }
+
 		public string ClientA { get; set; }
 		public string ClientB { get; set; }
-		public string QueueName { get; set; }		
+
+		public string SignA { get; set; }
+		public string SignB { get; set; }
+
 		public bool HasChildClientA { get; set; }
 		public bool HasChildClientB { get; set; }
+
 		public DateTime CreateDt { get; set; }
 		public string RequestData { get; set; }
 	}
@@ -54,5 +64,6 @@ namespace Core.Repositories
 		Task SetTransactionConfirmationLevel(ICoinTransaction transaction);
 
 		void DeleteTable();
+		Task SetSignature(Guid requestId, string client, string signature);
 	}
 }

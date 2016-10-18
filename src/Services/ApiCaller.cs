@@ -19,6 +19,8 @@ namespace Services
 		Task<string> Cashin(Guid requestId, Guid id, string coin, string to, decimal amount);
 		Task<string> Cashout(Guid requestId, Guid id, string coin, string client, string to, decimal amount, string sign);
 
+		Task<string> Transfer(Guid requestId, Guid id, string coin, string from, string to, decimal amount, string sign);
+
 		Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA,
 			decimal amountB, string signA, string signB);
 	}
@@ -95,6 +97,22 @@ namespace Services
 			});
 			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 
+		}
+
+		public async Task<string> Transfer(Guid requestId, Guid id, string coin, string from, string to, decimal amount, string sign)
+		{
+			var request = new RestRequest("/api/coin/transfer", Method.POST);
+			request.AddJsonBody(new
+			{
+				id = id,
+				coin = coin,
+				from = from,
+				to = to,
+				amount = amount,
+				sign = sign,
+				requestId = requestId
+			});
+			return (await DoRequest<TransactionResponse>(request)).TransactionHash;
 		}
 
 		public async Task<string> Swap(Guid requestId, Guid id, string clientA, string clientB, string coinA, string coinB, decimal amountA, decimal amountB,

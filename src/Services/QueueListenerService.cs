@@ -27,6 +27,7 @@ namespace Services
 		Task<IQueueListener> PutToListenerQueue(IncomingSwapRequest swap, Guid id);
 		Task ShutdownIdleListeners(bool force = false);
 		Task PauseListeners();
+		Task<IQueueListener> PutToListenerQueue(IncomingTransferRequest transfer, Guid id);
 	}
 
 	public class QueueListenerService : IQueueListenerService
@@ -96,19 +97,28 @@ namespace Services
 		public Task<IQueueListener> PutToListenerQueue(IncomingCashInRequest cashin, Guid id)
 		{
 			var clients = new List<string> { cashin.To };
-			return PutToListenerQueue(RequestType.CashIn, cashin, clients, id);
+			return PutToListenerQueue(RequestType.CashIn, cashin, clients, id, new List<string>());
 		}
 
 		public Task<IQueueListener> PutToListenerQueue(IncomingCashOutRequest cashout, Guid id)
 		{
 			var clients = new List<string> { cashout.Client };
-			return PutToListenerQueue(RequestType.CashOut, cashout, clients, id);
+			var signs = new List<string> { cashout.Sign };
+			return PutToListenerQueue(RequestType.CashOut, cashout, clients, id, signs);
 		}
 
 		public Task<IQueueListener> PutToListenerQueue(IncomingSwapRequest swap, Guid id)
 		{
 			var clients = new List<string> { swap.ClientA, swap.ClientB };
-			return PutToListenerQueue(RequestType.Swap, swap, clients, id);
+			var signs = new List<string> { swap.SignA, swap.SignB };
+			return PutToListenerQueue(RequestType.Swap, swap, clients, id, signs);
+		}
+
+		public Task<IQueueListener> PutToListenerQueue(IncomingTransferRequest transfer, Guid id)
+		{
+			var clients = new List<string> { transfer.From };
+			var signs = new List<string> { transfer.Sign };
+			return PutToListenerQueue(RequestType.Transfer, transfer, clients, id, signs);
 		}
 
 		public async Task ShutdownIdleListeners(bool force = false)
@@ -163,14 +173,16 @@ namespace Services
 			}
 		}
 
-		private async Task<IQueueListener> PutToListenerQueue(RequestType action, object data, List<string> clients, Guid id)
-		{
-			clients.Sort();
+
+
+		private async Task<IQueueListener> PutToListenerQueue(RequestType action, object data, List<string> clients, Guid id, List<string> signs)
+		{			
 			var transactions = (await _coinTransactionRepository.GetCoinTransactions(clients, _settings.MinTransactionConfirmaionLevel)).ToList();
 			var request = new InternalRequest
 			{
 				Id = id,
 				Action = action,
+				Clients = clients,				
 				Parents = transactions.GroupBy(o => o.QueueName).Select(o => o.OrderByDescending(x => x.CreateDt).First().RequestId).ToList(),
 				Request = data.ToJson()
 			};
@@ -178,7 +190,7 @@ namespace Services
 			IQueueListener listener = null;
 			try
 			{
-				listener = CreateQueueListener(await GetDbQueueListener(clients));
+				listener = CreateQueueListener(await GetDbQueueListener(clients.OrderBy(o => o).ToList()));
 				await listener.PutRequestToQueue(request);
 				await _coinTransactionRepository.AddCoinTransaction(new CoinTransaction
 				{
@@ -186,6 +198,8 @@ namespace Services
 					QueueName = listener.Name,
 					ClientA = clients[0],
 					ClientB = clients.Count > 1 ? clients[1] : null,
+					SignA = signs.Count > 0 ? signs[0] : null,
+					SignB = signs.Count > 1 ? signs[1] : null,
 					CreateDt = DateTime.UtcNow,
 					RequestData = request.Request
 				});

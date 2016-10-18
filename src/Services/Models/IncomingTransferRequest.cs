@@ -9,13 +9,13 @@ using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace Services.Models
 {
-	public class IncomingCashOutRequest
-	{
+    public class IncomingTransferRequest
+    {
 		public Guid TransactionId { get; set; }
 
 		public string Coin { get; set; }
 
-		public string Client { get; set; }
+		public string From { get; set; }
 
 		public string To { get; set; }
 
@@ -23,15 +23,15 @@ namespace Services.Models
 
 		public string Sign { get; set; }
 
-		public async Task<string> BuildHash(ICoinRepository coinRepository)
-		{
+	    public async Task<string> BuildHash(ICoinRepository coinRepository)
+	    {
 			var coin = await coinRepository.GetCoin(Coin);
 			var str = EthUtils.GuidToByteArray(TransactionId).ToHex() +
 					   Coin.HexToByteArray().ToHex() +
-					   Client.HexToByteArray().ToHex() +
+					   From.HexToByteArray().ToHex() +
 					   To.HexToByteArray().ToHex() +
 					   EthUtils.BigIntToArrayWithPadding(Amount.ToBlockchainAmount(coin.Multiplier)).ToHex();
 			return new Sha3Keccack().CalculateHash(str.HexToByteArray()).ToHex(true);
 		}
-	}
+    }
 }

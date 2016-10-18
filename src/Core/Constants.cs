@@ -7,6 +7,7 @@
 		/// </summary>
 		public static string StoragePrefix { get; set; } = "";
 
+		
 
 
 		public const string EmailNotifierQueue = "emailsqueue";		
@@ -30,12 +31,26 @@
 		/// <summary>
 		/// Used to notify external services about events in coin contracts
 		/// </summary>
-		public const string CoinEventQueue = "ethereum-coin-event-queue";			
+		public const string CoinEventQueue = "ethereum-coin-event-queue";
+
+		/// <summary>
+		/// Used to request signature from client
+		/// </summary>
+		public const string ConfirmationRequestOutQueue = "ethereum-confirmation-request-out-queue";
+
+		/// <summary>
+		/// Used to get signature from client
+		/// </summary>
+		public const string ConfirmationRequestIncomeQueue = "ethereum-confirmation-request-in-queue";
+
 
 		public const string MonitoringTable = "MonitoringTable";
 		public const string CoinTransactionTable = "CoinTransactionTable";
 		public const string QueueListenerTable = "QueueListenerTable";
-		public const string TransactionRequestMappingTable = "TransactionRequestMappingTable";		
+		public const string TransactionRequestMappingTable = "TransactionRequestMappingTable";
+		public const string CoinTable = "CoinTable";
+		public const string ConfirmationRequestTable = "ConfirmationRequestTable";
 
+		public const string EthereumBlockchain = "Ethereum";
 	}
 }

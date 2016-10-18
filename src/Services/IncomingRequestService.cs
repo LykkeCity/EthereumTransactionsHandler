@@ -49,6 +49,10 @@ namespace Services
 					var swap = request.JsonData.DeserializeJson<IncomingSwapRequest>();
 					(await _queueListenerService.PutToListenerQueue(swap, id)).Start();
 					break;
+				case RequestType.Transfer:
+					var transfer = request.JsonData.DeserializeJson<IncomingTransferRequest>();
+					(await _queueListenerService.PutToListenerQueue(transfer, id)).Start();
+					break;
 			}
 			msg = await _incomingQueue.GetRawMessageAsync();
 			await _incomingQueue.FinishRawMessageAsync(msg);
