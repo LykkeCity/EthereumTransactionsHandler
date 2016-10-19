@@ -27,5 +27,6 @@ namespace Core.Repositories
 		Task<IConfirmaionRequest> GetConfirmationRequest(Guid requestId, string client);
 
 		Task InsertConfirmationRequest(IConfirmaionRequest request);
+	    void DeleteTable();
 	}
 }

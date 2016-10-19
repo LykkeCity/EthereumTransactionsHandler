@@ -26,5 +26,6 @@ namespace Core.Repositories
     public interface ICoinRepository
     {
 	    Task<ICoin> GetCoin(string address);
+        Task InsertOrReplace(ICoin coin);
     }
 }

@@ -85,7 +85,7 @@ namespace Tests
 			}.ToJson());
 
 			await transactionUpdateService.GetAndProcessTransactionStatus();
-			await Task.Delay(200);
+			await Task.Delay(1000);
 			transactionCashin = await coinTransactionRepo.GetCoinTransaction(new Guid(messages[1].Id));
 			Assert.IsNotNull(transactionCashin.TransactionHash);
 

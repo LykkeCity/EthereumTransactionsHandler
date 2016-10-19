@@ -9,32 +9,49 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureRepositories.Repositories
 {
-	public class CoinEntity : TableEntity, ICoin
-	{
-		public const string PartitionKey = Constants.EthereumBlockchain;
+    public class CoinEntity : TableEntity, ICoin
+    {
+        public const string Key = "Blockchain";
+        
+        public string Name => RowKey;
+        public string Blockchain { get; set; }
+        public string Address { get; set; }
+        public string Multiplier { get; set; }
 
-		public string Blockchain => PartitionKey;
-		public string Name => RowKey;
-		public string Address { get; set; }
-		public string Multiplier { get; set; }
-	}
+        public static CoinEntity CreateCoinEntity(ICoin coin)
+        {
+            return new CoinEntity
+            {
+                Address = coin.Address,
+                RowKey = coin.Name,
+                Multiplier = coin.Multiplier,
+                PartitionKey = Key,
+                Blockchain = coin.Blockchain
+            };
+        }
+    }
 
 
-	public class CoinRepository : ICoinRepository
-	{
-		private readonly INoSQLTableStorage<CoinEntity> _table;
+    public class CoinRepository : ICoinRepository
+    {
+        private readonly INoSQLTableStorage<CoinEntity> _table;
 
-		public CoinRepository(INoSQLTableStorage<CoinEntity> table)
-		{
-			_table = table;
-		}
+        public CoinRepository(INoSQLTableStorage<CoinEntity> table)
+        {
+            _table = table;
+        }
 
-		public async Task<ICoin> GetCoin(string address)
-		{
-			var coin = (await _table.GetDataAsync(CoinEntity.PartitionKey, o => o.Address == address)).FirstOrDefault();
-			if (coin == null)
-				throw new Exception("Unknown coin address - " + address);
-			return coin;
-		}
-	}
+        public async Task<ICoin> GetCoin(string coinName)
+        {
+            var coin = await _table.GetDataAsync(CoinEntity.Key, coinName);
+            if (coin == null)
+                throw new Exception("Unknown coin address - " + coinName);
+            return coin;
+        }
+
+        public async Task InsertOrReplace(ICoin coin)
+        {
+            await _table.InsertOrReplaceAsync(CoinEntity.CreateCoinEntity(coin));
+        }
+    }
 }

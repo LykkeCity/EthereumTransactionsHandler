@@ -179,7 +179,7 @@ namespace Tests
 			Assert.IsFalse(taskSwap.IsCompleted);
 			await coinRepo.SetTransactionConfirmationLevel(new CoinTransaction { RequestId = id, ConfirmaionLevel = 3, Error = false });
 
-			await Task.Delay(300);
+			await Task.Delay(1000);
 			Assert.IsTrue(taskSwap.IsCompleted);
 			Assert.AreEqual(0, await Config.ListenerQueueFactory(listener.Name).Count());
 		}
