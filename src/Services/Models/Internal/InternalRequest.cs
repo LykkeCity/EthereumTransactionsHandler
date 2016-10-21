@@ -42,9 +42,9 @@ namespace Services.Models.Internal
 
 	public enum RequestType
 	{
-		CashIn = 0,
-		CashOut = 1,
-		Swap = 3,
-		Transfer = 4
+		CashIn,
+		CashOut,
+		Swap,
+		Transfer
 	}
 }

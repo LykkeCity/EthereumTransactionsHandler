@@ -116,6 +116,7 @@ namespace Services
 					return;
 				}
 				await Task.Delay(TimeSpan.FromSeconds(1));
+				_lastMessage = DateTime.UtcNow;
 			}
 			if (Working)
 			{

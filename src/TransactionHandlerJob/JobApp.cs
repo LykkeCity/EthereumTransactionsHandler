@@ -27,6 +27,7 @@ namespace TransactionHandlerJob
 		    Services.GetService<ProcessIncomingRequestJob>().Start();
 		    Services.GetService<ProcessTransactionEventsJob>().Start();
 		    Services.GetService<ShutdownIdleListenersJob>().Start();
+			Services.GetService<ProcessClientConfirmationsJob>().Start();
 	    }
 
 		public async Task Stop()
@@ -34,7 +35,7 @@ namespace TransactionHandlerJob
 			await Services.GetService<ProcessIncomingRequestJob>().Stop();
 			await Services.GetService<ProcessTransactionEventsJob>().Stop();
 			await Services.GetService<ShutdownIdleListenersJob>().Stop();
-
+			await Services.GetService<ProcessClientConfirmationsJob>().Stop();
 			// pause all listeners
 			await Services.GetService<IQueueListenerService>().PauseListeners();
 

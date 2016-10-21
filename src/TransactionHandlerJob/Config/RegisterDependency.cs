@@ -27,6 +27,7 @@ namespace TransactionHandlerJob.Config
 			collection.AddSingleton<MonitoringJob>();
 			collection.AddSingleton<ProcessTransactionEventsJob>();
 			collection.AddSingleton<ShutdownIdleListenersJob>();
+			collection.AddSingleton<ProcessClientConfirmationsJob>();
 		}
 	}
 }
