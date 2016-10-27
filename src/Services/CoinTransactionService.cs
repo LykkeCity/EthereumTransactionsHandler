@@ -25,8 +25,8 @@ namespace Services
 		private readonly ITransactionRequestMappingRepository _transactionRequestMappingRepository;
 		private readonly IConfirmationRequestRepository _confirmationRequestRepository;
 		private readonly ILog _logger;
-		private readonly IQueueExt _confirmationRequestOutQueue;
-		private readonly IQueueExt _confirmationRequestIncomeQueue;
+		private readonly IQueueExt _confirmationRequestQueue;
+		private readonly IQueueExt _confirmationResponseQueue;
 
 		public CoinTransactionService(ICoinTransactionRepository coinTransactionRepository,
 			ITransactionRequestMappingRepository transactionRequestMappingRepository, IConfirmationRequestRepository confirmationRequestRepository,
@@ -36,8 +36,8 @@ namespace Services
 			_transactionRequestMappingRepository = transactionRequestMappingRepository;
 			_confirmationRequestRepository = confirmationRequestRepository;
 
-			_confirmationRequestOutQueue = queueFactory(Constants.ConfirmationRequestOutQueue);
-			_confirmationRequestIncomeQueue = queueFactory(Constants.ConfirmationRequestIncomeQueue);
+			_confirmationRequestQueue = queueFactory(Constants.ConfirmationRequestQueue);
+			_confirmationResponseQueue = queueFactory(Constants.ConfirmationResponseQueue);
 			_logger = logger;
 		}
 
@@ -77,7 +77,7 @@ namespace Services
 		{
 			var confirmation = await _confirmationRequestRepository.GetConfirmationRequest(requestId, client);
 			if (confirmation != null) return;
-			await _confirmationRequestOutQueue.PutRawMessageAsync(new { requestId = requestId, client = client, hash = hash }.ToJson());
+			await _confirmationRequestQueue.PutRawMessageAsync(new { requestId = requestId, client = client, hash = hash }.ToJson());
 			await _confirmationRequestRepository.InsertConfirmationRequest(new ConfirmationRequest
 			{
 				Client = client,
@@ -87,13 +87,13 @@ namespace Services
 
 		public async Task<bool> ProcessClientConfirmation()
 		{
-			var msg = await _confirmationRequestIncomeQueue.GetRawMessageAsync();
+			var msg = await _confirmationResponseQueue.GetRawMessageAsync();
 			if (msg == null) return false;
 			var clientSignature = msg.AsString.DeserializeJson<ClientSignature>();
 			await _logger.WriteInfo("CoinTransactionService", "ProcessClientConfirmation", "",
 					$"New signature from client RequestId={clientSignature.RequestId}, Client={clientSignature.Client}");
 			await _coinTransactionRepository.SetSignature(clientSignature.RequestId, clientSignature.Client, clientSignature.Signature);
-			await _confirmationRequestIncomeQueue.FinishRawMessageAsync(msg);
+			await _confirmationResponseQueue.FinishRawMessageAsync(msg);
 			return true;
 		}
 

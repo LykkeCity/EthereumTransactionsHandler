@@ -36,12 +36,12 @@
 		/// <summary>
 		/// Used to request signature from client
 		/// </summary>
-		public const string ConfirmationRequestOutQueue = "ethereum-confirmation-request-out-queue";
+		public const string ConfirmationRequestQueue = "confirmation-request-queue";
 
 		/// <summary>
 		/// Used to get signature from client
 		/// </summary>
-		public const string ConfirmationRequestIncomeQueue = "ethereum-confirmation-request-in-queue";
+		public const string ConfirmationResponseQueue = "ethereum-signed-request-queue";
 
 
 		public const string MonitoringTable = "MonitoringTable";

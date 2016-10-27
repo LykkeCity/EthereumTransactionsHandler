@@ -52,7 +52,7 @@ namespace Tests
 
             await Task.Delay(300);
 
-            var queueCount = await Config.Services.GetService<Func<string, IQueueExt>>()(Constants.ConfirmationRequestOutQueue).Count();
+            var queueCount = await Config.Services.GetService<Func<string, IQueueExt>>()(Constants.ConfirmationRequestQueue).Count();
 
             Assert.AreEqual(2, queueCount);
         }

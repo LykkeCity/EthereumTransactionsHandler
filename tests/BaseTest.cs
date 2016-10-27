@@ -31,8 +31,8 @@ namespace Tests
             await queueFactory(Constants.CoinIncomingRequestsQueue).ClearAsync();
             await queueFactory(Constants.CoinTransactionQueue).ClearAsync();
             await queueFactory(Constants.EmailNotifierQueue).ClearAsync();
-            await queueFactory(Constants.ConfirmationRequestOutQueue).ClearAsync();
-            await queueFactory(Constants.ConfirmationRequestIncomeQueue).ClearAsync();
+            await queueFactory(Constants.ConfirmationRequestQueue).ClearAsync();
+            await queueFactory(Constants.ConfirmationResponseQueue).ClearAsync();
 
 
             var coinRepo = Config.Services.GetService<ICoinRepository>();
