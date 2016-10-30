@@ -77,7 +77,7 @@ namespace Services
 		{
 			var confirmation = await _confirmationRequestRepository.GetConfirmationRequest(requestId, client);
 			if (confirmation != null) return;
-			await _confirmationRequestQueue.PutRawMessageAsync(new { requestId = requestId, client = client, hash = hash }.ToJson());
+			await _confirmationRequestQueue.PutRawMessageAsync(new { requestId = requestId, client = client, hash = hash, blockchain = Constants.EthereumBlockchain }.ToJson());
 			await _confirmationRequestRepository.InsertConfirmationRequest(new ConfirmationRequest
 			{
 				Client = client,
