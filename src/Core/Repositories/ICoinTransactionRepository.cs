@@ -11,7 +11,9 @@ namespace Core.Repositories
 		Guid RequestId { get; }
 		string QueueName { get; set; }
 
-		string TransactionHash { get; set; }
+	    string Type { get; set; }
+
+	    string TransactionHash { get; set; }
 		int ConfirmaionLevel { get; set; }
 		bool Error { get; set; }
 
@@ -33,8 +35,9 @@ namespace Core.Repositories
 	{
 		public Guid RequestId { get; set; }
 		public string QueueName { get; set; }
+	    public string Type { get; set; }
 
-		public string TransactionHash { get; set; }
+	    public string TransactionHash { get; set; }
 		public int ConfirmaionLevel { get; set; }
 		public bool Error { get; set; }
 

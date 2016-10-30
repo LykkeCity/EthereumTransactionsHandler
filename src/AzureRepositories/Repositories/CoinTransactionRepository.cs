@@ -14,7 +14,8 @@ namespace AzureRepositories.Repositories
 		public const string Key = "CoinTransactionEntity";
 
 		public Guid RequestId => new Guid(RowKey);
-		public string TransactionHash { get; set; }
+	    public string Type { get; set; }
+	    public string TransactionHash { get; set; }
 		public int ConfirmaionLevel { get; set; }
 		public bool Error { get; set; }
 
@@ -40,6 +41,7 @@ namespace AzureRepositories.Repositories
 				SignA = coinTransaction.SignA,
 				SignB = coinTransaction.SignB,
 
+                Type = coinTransaction.Type,
 				TransactionHash = coinTransaction.TransactionHash,
 				ConfirmaionLevel = coinTransaction.ConfirmaionLevel,
 				CreateDt = coinTransaction.CreateDt,

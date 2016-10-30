@@ -194,6 +194,7 @@ namespace Services
 				await listener.PutRequestToQueue(request);
 				await _coinTransactionRepository.AddCoinTransaction(new CoinTransaction
 				{
+                    Type = action.ToString(),
 					RequestId = request.Id,
 					QueueName = listener.Name,
 					ClientA = clients[0],
