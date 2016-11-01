@@ -27,7 +27,7 @@ namespace Services.Models
 		{
 			var coin = await coinRepository.GetCoin(Coin);
 			var str = EthUtils.GuidToByteArray(TransactionId).ToHex() +
-					   coin.Address.HexToByteArray().ToHex() +
+					   coin.AssetAddress.HexToByteArray().ToHex() +
 					   Client.HexToByteArray().ToHex() +
 					   To.HexToByteArray().ToHex() +
 					   EthUtils.BigIntToArrayWithPadding(Amount.ToBlockchainAmount(coin.Multiplier)).ToHex();

@@ -27,7 +27,6 @@ namespace Tests
             listenerRepo.DeleteTable();
 
             var queueFactory = Config.Services.GetService<Func<string, IQueueExt>>();
-            await queueFactory(Constants.CoinEventQueue).ClearAsync();
             await queueFactory(Constants.CoinIncomingRequestsQueue).ClearAsync();
             await queueFactory(Constants.CoinTransactionQueue).ClearAsync();
             await queueFactory(Constants.EmailNotifierQueue).ClearAsync();
@@ -36,8 +35,8 @@ namespace Tests
 
 
             var coinRepo = Config.Services.GetService<ICoinRepository>();
-            await coinRepo.InsertOrReplace(new Coin { Address = "0xa", Name = "Eth", Multiplier = "1", Blockchain = "ethereum"});
-            await coinRepo.InsertOrReplace(new Coin { Address = "0xb", Name = "Lykke", Multiplier = "1", Blockchain = "ethereum" });
+            await coinRepo.InsertOrReplace(new Coin { AssetAddress = "0xa", Id = "Eth", Multiplier = 1, Blockchain = "ethereum"});
+            await coinRepo.InsertOrReplace(new Coin { AssetAddress = "0xb", Id = "Lykke", Multiplier = 1, Blockchain = "ethereum" });
 
             Console.WriteLine("Setup test");
         }

@@ -11,19 +11,19 @@ namespace AzureRepositories.Repositories
 {
     public class CoinEntity : TableEntity, ICoin
     {
-        public const string Key = "Blockchain";
+        public const string Key = "Asset";
         
-        public string Name => RowKey;
+        public string Id => RowKey;
         public string Blockchain { get; set; }
-        public string Address { get; set; }
-        public string Multiplier { get; set; }
+        public string AssetAddress { get; set; }
+        public int Multiplier { get; set; }
 
         public static CoinEntity CreateCoinEntity(ICoin coin)
         {
             return new CoinEntity
             {
-                Address = coin.Address,
-                RowKey = coin.Name,
+                AssetAddress = coin.AssetAddress,
+                RowKey = coin.Id,
                 Multiplier = coin.Multiplier,
                 PartitionKey = Key,
                 Blockchain = coin.Blockchain

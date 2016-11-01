@@ -35,8 +35,8 @@ namespace Services.Models
 			var strForHash3 = EthUtils.GuidToByteArray(TransactionId).ToHex() +
 							ClientA.HexToByteArray().ToHex() +
 							ClientB.HexToByteArray().ToHex() +
-							coinA.Address.HexToByteArray().ToHex() +
-                            coinB.Address.HexToByteArray().ToHex() +
+							coinA.AssetAddress.HexToByteArray().ToHex() +
+                            coinB.AssetAddress.HexToByteArray().ToHex() +
 							EthUtils.BigIntToArrayWithPadding(AmountA.ToBlockchainAmount(coinA.Multiplier)).ToHex() +
 							EthUtils.BigIntToArrayWithPadding(AmountB.ToBlockchainAmount(coinB.Multiplier)).ToHex();
 			return new Sha3Keccack().CalculateHash(strForHash3.HexToByteArray()).ToHex(true);

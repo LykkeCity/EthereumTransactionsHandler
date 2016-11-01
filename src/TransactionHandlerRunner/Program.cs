@@ -103,13 +103,22 @@ namespace TransactionHandlerRunner
 
 			if (string.IsNullOrWhiteSpace(settings.Db?.DataConnString))
 				throw new Exception("DataConnString is missing");
+
 			if (string.IsNullOrWhiteSpace(settings.Db?.LogsConnString))
 				throw new Exception("LogsConnString is missing");
-			if (string.IsNullOrWhiteSpace(settings.Db?.ExchangeQueueConnString))
-				throw new Exception("ExchangeQueueConnString is missing");
-			if (string.IsNullOrWhiteSpace(settings.Db?.EthereumNotificationsConnString))
-				throw new Exception("EthereumNotificationsConnString is missing");
-		}
+
+			if (string.IsNullOrWhiteSpace(settings.Db?.DictsConnString))
+				throw new Exception("DictsConnString is missing");
+
+			if (string.IsNullOrWhiteSpace(settings.Db?.EthereumHandlerConnString))
+				throw new Exception("EthereumHandlerConnString is missing");
+
+            if (string.IsNullOrWhiteSpace(settings.Db?.SharedConnString))
+                throw new Exception("SharedConnString is missing");
+
+            if (string.IsNullOrWhiteSpace(settings.Db?.SharedTransactionConnString))
+                throw new Exception("SharedTransactionConnString is missing");
+        }
 
 		[DllImport("kernel32")]
 		public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
