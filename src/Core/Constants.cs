@@ -48,7 +48,7 @@
 		public const string CoinTransactionTable = "CoinTransactionTable";
 		public const string QueueListenerTable = "QueueListenerTable";
 		public const string TransactionRequestMappingTable = "TransactionRequestMappingTable";
-		public const string CoinTable = "CoinTable";
+		public const string CoinTable = "Dictionaries";
 		public const string ConfirmationRequestTable = "ConfirmationRequestTable";
 
 		public const string EthereumBlockchain = "Ethereum";
